@@ -1,0 +1,11 @@
+{
+    "publisher": {
+        "brokerAddress": "a",
+        "baseTopic": "ElderlyMonitoring"
+    },
+    "patients": {
+        "0":{
+
+        }
+    }
+}
