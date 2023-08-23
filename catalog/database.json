@@ -4,8 +4,14 @@
         "baseTopic": "ElderlyMonitoring"
     },
     "patients": {
-        "0":{
-
+        "0": {
+            "status": "healthy"
+        },
+        "1": {
+            "status": "healthy"
+        },
+        "2": {
+            "status": "healthy"
         }
     }
 }

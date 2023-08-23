@@ -13,8 +13,18 @@ class Catalog(object):
         return json.dumps(data)
 
 
-    def POST(self):
-        pass
+    def POST(self, *uri, **params):
+        request_data = cherrypy.request.body.read().decode('utf-8')
+        new_data = json.loads(request_data)
+
+
+        with open('database.json','r+') as file:
+            file_data = json.load(file)
+    
+        file_data["patients"].update(new_data)
+
+        with open("database.json", "w") as file:
+            json.dump(file_data, file, indent = 4)
 
     def PUT(self):
         pass
