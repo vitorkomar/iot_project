@@ -1,17 +1,20 @@
 {
     "publisher": {
-        "brokerAddress": "a",
+        "brokerAddress": "mqtt.eclipseprojects.io",
         "baseTopic": "ElderlyMonitoring"
     },
     "patients": {
         "0": {
-            "status": "healthy"
+            "topic": ""
         },
         "1": {
-            "status": "healthy"
+            "topic": ""
         },
         "2": {
-            "status": "healthy"
+            "topic": ""
+        },
+        "5": {
+            "topic": "ElderlyMonitoring/5"
         }
     }
 }
