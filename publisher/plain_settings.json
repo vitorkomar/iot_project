@@ -1,6 +1,6 @@
 {   
     "isNew" : true,
-    "catalogURL" : "htttp://localhost/8080",
+    "catalogURL" : "http://localhost:8080",
     "brokerAddress":"",
     "port": 1883,
     "baseTopic": "",

@@ -1,8 +1,8 @@
 {
     "isNew": false,
-    "catalogURL": "htttp://localhost/8080",
+    "catalogURL": "http://localhost:8080",
+    "brokerAddress": "mqtt.eclipseprojects.io",
     "port": 1883,
     "baseTopic": "ElderlyMonitoring",
-    "id": 5,
-    "brokerAddress": "mqtt.eclipseprojects.io"
+    "id": 5
 }

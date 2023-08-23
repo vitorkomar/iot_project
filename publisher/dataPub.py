@@ -7,13 +7,15 @@ import requests
 
 conf = json.load(open("settings.json"))
 topic = conf["baseTopic"]
-broker = conf["broker"]
+broker = conf["brokerAddress"]
 port = conf["port"]
 isNew = conf["isNew"]
 Id = conf["id"]
+catalogURL = conf['catalogURL']
 
 if isNew:
-    data = requests.get("http://localhost:8080/publisher")
+    print(catalogURL+'/publisher')
+    data = requests.get(catalogURL+'/publisher')
     data = data.json()
     broker = data['brokerAddress']
     topic = data['baseTopic']+'/'+str(Id)
@@ -22,6 +24,10 @@ if isNew:
     conf['isNew'] = False
     with open("settings.json", "w") as file:
         json.dump(conf, file, indent = 4)
+
+    postData = dict()
+    postData[str(str(Id))] = {"topic": topic}
+    requests.post(catalogURL, json=postData)
 
 
 publisher = mqttPublisher(Id, broker, port)
