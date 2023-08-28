@@ -38,9 +38,44 @@ class TelegramBot():
                 registerNewPatient(chatId, patientId)
                 self.bot.sendMessage(chatId, text="New patient registered sucessfully")
             
+
+    def send_fever_message(self, patient):
+        '''method that sends a message to every chat user 
+        that are subscribed to a certatin patient'''
+        for chatId in self.conf:
+            if patient in self.conf[chatId]['patients']:
+                self.bot.sendMessage(chatId, "Fever Alert: Please check on the patient!")
+
     
+    def send_fall_message(self, patient):
+        '''method that sends a message to every chat user 
+        that are subscribed to a certatin patient'''
+        for chatId in self.conf:
+            if patient in self.conf[chatId]['patients']:
+                self.bot.sendMessage(chatId, "Fall Alert: Please check on the patient!")
+
+        
+
+class Server():
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    @cherrypy.expose
+    def fever_alert(self, *uri):
+        patient = str(uri[0])
+        self.bot.send_fever_message(patient)
+        
+
+    @cherrypy.expose
+    def fall_alert(self, *uri):
+        patient = str(uri[0])
+        self.bot.send_fever_message(patient)
+
+
 
 if __name__ == '__main__':
     bot = TelegramBot("5837844672:AAGPkiYHwtHVQQ71ErsnVvA2u7PBIahxw_E")
-    while True:
-        time.sleep(3)
+    cherrypy.config.update({'server.socket_port': 8099})
+    cherrypy.quickstart(Server(bot))
+    
