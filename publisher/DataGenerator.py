@@ -3,9 +3,11 @@ import matplotlib.pyplot as plt
 
 class DataGenerator():
 
-    def __init__(self, average, sigma):
+    def __init__(self, average, sigma, samplingFrequency):
         self.avg = average
         self.sigma = sigma
+        self.samplingFrequency = samplingFrequency
+        self.currSample = None
     
     def setAvg(self, average):
         self.avg = average
@@ -19,8 +21,10 @@ class DataGenerator():
     def getSigma(self):
         return self.sigma
 
-    def drawSample(self):
-        return self.avg + self.sigma*np.random.randn()
+    def drawSample(self, timeInstant):
+        if (timeInstant%self.samplingFrequency) == 0 or self.currSample is None:
+            self.currSample = self.avg + self.sigma*np.random.randn()
+        return self.currSample
 
     def generate(self, length, events):
         ''' inputs: length -> length to be generated
