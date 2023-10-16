@@ -4,74 +4,59 @@ import cherrypy
 import json 
 import time
 import random 
+import requests
 
 class TelegramBot():
 
-    def __init__(self, token):
-        self.tokenBot = token
-        self.bot = telepot.Bot(self.tokenBot)
+    def __init__(self, token, catalogURL):
+        self.catalogURL = catalogURL
+        self.bot = telepot.Bot(token)
         self.conf = json.load(open("telegram\settingsUpdated.json"))
         self.commands = ['/help: show information and brief instructions about available commands.', 
-                         '/track: register a new patient to keep track, user must provide patient name. /track <Surname> <Name>',
-                         '/tracking: get a list of patients beeing tracked.',
+                         '/connect: connect to a monitoring device, user must provide device ID and password. /connect <DeviceID> <Password>',
+                         '/associate: associate a device to the patient it is monitoring, user must provide device ID and patient name. /associate <DeviceID> <Name>',
+                         '/monitoring: get a list of patients beeing monitored.',
                          '/check: get information about a patient status given its ID. /check <ID>',
-                         '/stopTracking: stop tracking the status of a patient given its ID.'] 
+                         '/stopMonitoring: stop monitoring the status of a patient given its name and associated device ID. /stopMonitoring <DeviceID> <Name>'] 
         ## need to better define tracking
         ## need to better define check
         MessageLoop(self.bot, {'chat': self.on_chat_message}).run_as_thread()
 
-    def getName(self, chatID, ID):
-        for key in self.conf[chatID]['patients'].keys():
-            if key == ID:
-                return self.conf[chatID]['patients'][key]
-        return None
-
-    def generateID(self):
-        #data = json.load(open('telegram\settingsUpdated.json'))
-        universalID = 0
+    def hasID(self, deviceID):
         for chatID in self.conf.keys():
-            universalID += len(self.conf[chatID]['patients'])
-        return universalID
-
-    def existingID(self, chatID, ID):
-        for key in self.conf[chatID]['patients'].keys():
-            if key == ID:
-                return True
-        return False
-
-    def hasID(self, patientName):
-        for chatID in self.conf.keys():
-            for key, value in self.conf[chatID]['patients'].items():
-                if value == patientName:
+            for key in self.conf[chatID]['patients'].keys():
+                if key == deviceID:
                     return True
         return False
 
-    def registerNewPatient(self, chatId, patientName):
-        """Register a new patient to keep track"""
-        ## need to better define the name of the function and how it is stored maybe tuple instead of two lists
-        ## universily identify?????
-        ## data or self.conf?? 
-        ## Diferent chats should be able to track same patient 
-            ## apparently it is done but needs further testing
-        #data = json.load(open('telegram\settingsUpdated.json'))
-        #data[chatId]['patients'][self.generateID()] = patientName
-        if self.hasID(patientName):
-            for chatID in self.conf.keys():
-                for key, value in self.conf[chatID]['patients'].items():
-                    if value == patientName:
-                        newID = key
+    def isConnected(self, chatID, deviceID):
+        for key in self.conf[chatID]['patients'].keys():
+            if key == deviceID:
+                return True
+        return False
+    
+    def verifyPassword(self, chatId, deviceID, givenPassword):
+        data = requests.get(self.catalogURL+'/patients')
+        data = data.json()
+        if givenPassword == data[deviceID]['password']:
+            return True
+        else: 
+            return False 
+    
+    def registerDevice(self, chatId, deviceID):
+        if self.hasID(deviceID):
+            pass
         else:
-            newID = str(self.generateID())
-            while self.existingID(chatId, newID):
-                newID = int(newID)
-                newID += 1
-                newID = str(newID)
-        self.conf[chatId]['patients'][newID] = patientName
+            self.conf[chatId]['patients'][deviceID] = ''
+            with open("telegram\settingsUpdated.json", "w") as file:
+                json.dump(self.conf, file, indent = 4)
+            self.conf = json.load(open("telegram\settingsUpdated.json")) #update bot configs
+
+    def associateDevice(self, chatId, deviceID, patientName):
+        self.conf[chatId]['patients'][deviceID] = patientName
         with open("telegram\settingsUpdated.json", "w") as file:
             json.dump(self.conf, file, indent = 4)
         self.conf = json.load(open("telegram\settingsUpdated.json")) #update bot configs
-
-        return newID
 
     def on_chat_message(self, msg):
         content_type, chat_type, chatId = telepot.glance(msg)
@@ -90,14 +75,24 @@ class TelegramBot():
                     self.bot.sendMessage(chatId, text=command)
             elif command == '/start':
                 self.bot.sendMessage(chatId, text="Hello, thanks for contacting!\nType /help to see available commands.")
-            elif command == '/track':
-                patientName = ' '.join(text.split()[1:]) 
-                newID = self.registerNewPatient(chatId, patientName)
-                self.bot.sendMessage(chatId, text="Tracking patient "+str(patientName)+'. Patient ID is '+str(newID)+'.')
-            elif command == '/tracking':
+            elif command == '/connect':
+                deviceID = text.split()[1]
+                password = text.split()[2]
+                if self.hasID(deviceID) and self.verifyPassword(chatId, deviceID, password):
+                    self.registerDevice(chatId, deviceID)
+                    self.bot.sendMessage(chatId, text="Succesfully connected to device "+str(deviceID)+".")
+                else:
+                    self.bot.sendMessage(chatId, text="Incorret credentials.")
+            elif command == '/associate': 
+                deviceID = text.split()[1]
+                patientName = ' '.join(text.split()[2:]) 
+                if self.isConnected(chatId, deviceID):
+                    self.associateDevice(chatId, deviceID, patientName)
+                    self.bot.sendMessage(chatId, text="Device "+str(deviceID)+' is monitoring patient '+str(patientName)+'.')
+                else:
+                    self.bot.sendMessage(chatId, text="Device "+str(deviceID)+' is not connected.')
+            elif command == '/monitoring':
                 if len(self.conf[chatId]['patients']) > 0:
-                    self.bot.sendMessage(chatId, text='No patient is beeing tracked at the moment.')
-                else: 
                     patientsList = '```\n'
                     patientsList += 'ID : Name\n'
                     for key, value in self.conf[chatId]['patients'].items():
@@ -106,19 +101,22 @@ class TelegramBot():
                         patientsList += str(patientID)+' : '+str(patientName)+'\n'
                     patientsList += '```'
                     self.bot.sendMessage(chatId, text=patientsList, parse_mode='MarkdownV2')
+                else: 
+                    self.bot.sendMessage(chatId, text='No patient is beeing monitored at the moment.')
             elif command == '/check':
                 #need to better understand this method
                 pass
-            elif command == '/stopTracking':
-                patientID = text.split()[1]
+            elif command == '/stopMonitoring':
+                deviceID = text.split()[1]
+                patientName = ' '.join(text.split()[2:])
                 if self.getName(chatId, patientID) is None:
-                    self.bot.sendMessage(chatId, text='Patient is not being tracked. Please type /tracking to see patients beeing tracked.')
+                    self.bot.sendMessage(chatId, text='Patient is not being monitored. Please type /monitoring to see patients beeing monitored.')
                 else: 
-                    patientName = self.getName(chatId, patientID)
-                    self.conf[chatId]['patients'].pop(patientID)
+                    self.conf[chatId]['patients'].pop(deviceID)
                     with open("telegram\settingsUpdated.json", "w") as file:
                         json.dump(self.conf, file, indent = 4)
-                    self.bot.sendMessage(chatId, text="Patient "+str(patientName)+' with ID '+str(patientID)+' is no longer being tracked.')
+                    self.bot.sendMessage(chatId, text="Patient "+str(patientName)+' is no longer being monitored.')
+                    self.bot.sendMessage(chatId, text="Device "+str(deviceID)+" is no longer connected.")
             else:
                 self.bot.sendMessage(chatId, text="Inavlid command, type /help to see available commands.")
             
@@ -152,9 +150,11 @@ class Server():
         self.bot.send_fever_message(patient)
 
 if __name__ == '__main__':
-    token = "6459586229:AAGLeU1eA4q-noi6Uob2El3R69jwfTHHwLI"
 
-    bot = TelegramBot(token)
-    cherrypy.config.update({'server.socket_port': 8083})
+    token = "6577470521:AAFTej1Dn-sOG6jE6xrYhvr9BHqudhI-SQg"
+    catalogURL = "http://127.0.0.1:8083"
+
+    bot = TelegramBot(token, catalogURL)
+    cherrypy.config.update({'server.socket_port': 1402})
     cherrypy.quickstart(Server(bot))
     

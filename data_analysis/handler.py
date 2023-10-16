@@ -1,17 +1,13 @@
-from data_handler import *
+from DataHandler import *
 import requests
 import numpy as np 
 import json
 import time
 
-conf = json.load(open("subscriber\settings.json"))
-topic = conf["baseTopic"]
-broker = conf["brokerAddress"]
-port = conf["port"]
-isNew = conf["isNew"]
-Id = conf["id"]
-catalogURL = conf['catalogURL']
 
-handler = DataHandler("client-"+str(Id), broker, port)
-handler.run(topic)
+catalogURL = "http://127.0.0.1:8083"
+
+handler = DataHandler(catalogURL, 'client-'+str(7))
+handler.updateSettings()
+handler.runAnalysys()
 

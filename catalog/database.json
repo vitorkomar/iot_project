@@ -3,18 +3,14 @@
         "brokerAddress": "mqtt.eclipseprojects.io",
         "baseTopic": "ElderlyMonitoring"
     },
+    "subscriber": {
+        "brokerAddress": "mqtt.eclipseprojects.io",
+        "baseTopic": "ElderlyMonitoring"
+    },
     "patients": {
-        "0": {
-            "topic": ""
-        },
-        "1": {
-            "topic": ""
-        },
-        "2": {
-            "topic": ""
-        },
-        "5": {
-            "topic": "ElderlyMonitoring/5"
+        "7": {
+            "topic": "ElderlyMonitoring/7",
+            "password": "HBZSOCL0"
         }
     }
 }

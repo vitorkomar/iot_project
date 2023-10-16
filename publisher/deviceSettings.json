@@ -3,7 +3,7 @@
     "catalogURL": "http://127.0.0.1:8083",
     "brokerAddress": "mqtt.eclipseprojects.io",
     "port": 1883,
-    "baseTopic": "ElderlyMonitoring",
-    "id": "client-7",
-    "topic": "ElderlyMonitoring/7"
+    "topic": "ElderlyMonitoring/7",
+    "id": 7,
+    "password": "HBZSOCL0"
 }

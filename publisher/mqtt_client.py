@@ -20,6 +20,7 @@ class mqttPublisher():
         self.client.disconnect()
 
     def publish_data(self, topic, msg):
+        print('Published on topic:', topic)
         self.client.publish(topic, json.dumps(msg), 2)
 
 
