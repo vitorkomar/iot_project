@@ -5,6 +5,14 @@ from DataGenerator import *
 import random
 import requests
 
+""" Class that simulates the sensors that will gather info about patients 
+    It basically is a mqtt publisher, that publishes ONLY on a specific topic. 
+    It publishes a new message everytime data is acquired, acquiring data depends on the sampling frequency
+    At each publication it will publish the new data gathered by a sensor and if a sensor did not record anything 
+        on that time instant will simply send the last recorded one
+    My idea was that each device has an ID and password issued on frabication, like a router for instance
+        that info will be provided to the telegram bot to connect to the device"""
+
 class TrackingDevice():
 
     def __init__(self, catalogURL):
@@ -49,8 +57,9 @@ class TrackingDevice():
             json.dump(conf, file, indent = 4)
 
     def run(self): 
-        fs = np.array([6,36,3600,3600,3600,3600])
-
+        fs = np.array([6,36,3600,3600,3600,3600]) # sampling frequencies of each sensor
+        
+        #sensor instances
         tempGenerator = DataGenerator(36.6, 0.05, fs[0]) # one sample every 10 min
         accGenerator = DataGenerator(1, 0, fs[1]) # one sample every ? min
         glucGenerator = DataGenerator(99, 0.85, fs[2]) # one sample every 60 min
@@ -58,6 +67,7 @@ class TrackingDevice():
         diastoleGenerator = DataGenerator(77.7, 0.94, fs[4]) # one sample every 60 min
         satGenerator = DataGenerator(97.7, 1.02, fs[5]) # one sample every 60 min 
 
+        #publisher instance
         publisher = mqttPublisher(str(self.deviceID), self.broker, self.port)
         publisher.start()
 

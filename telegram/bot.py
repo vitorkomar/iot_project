@@ -6,6 +6,11 @@ import time
 import random 
 import requests
 
+"""Telegram bot that will allow interaction with wearable device 
+    my opnion is that to understand the bot is better to run it and use it alongside with reading the code
+    VERY IMPORTANT: DO NOT BLOCK THE BOT!!!!!
+    it will break everything, still need to find a way to fix this behaviour"""
+
 class TelegramBot():
 
     def __init__(self, token, catalogURL):
@@ -18,7 +23,6 @@ class TelegramBot():
                          '/monitoring: get a list of patients beeing monitored.',
                          '/check: get information about a patient status given its ID. /check <ID>',
                          '/stopMonitoring: stop monitoring the status of a patient given its name and associated device ID. /stopMonitoring <DeviceID> <Name>'] 
-        ## need to better define tracking
         ## need to better define check
         MessageLoop(self.bot, {'chat': self.on_chat_message}).run_as_thread()
 
@@ -119,7 +123,8 @@ class TelegramBot():
                     self.bot.sendMessage(chatId, text="Device "+str(deviceID)+" is no longer connected.")
             else:
                 self.bot.sendMessage(chatId, text="Inavlid command, type /help to see available commands.")
-            
+
+    """We need to finish data analysis in order to properly implement the following methods and check functionality"""
     def send_fever_message(self, patient):
         '''method that sends a message to every chat user 
         that are subscribed to a certatin patient'''

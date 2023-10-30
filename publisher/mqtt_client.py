@@ -3,7 +3,8 @@ import paho.mqtt.client as PahoMQTT
 
 class mqttPublisher():
     '''wrapper class that is used to publish data from the raspberrry pi using mqtt'''
-
+    """ maybe it would be better to unify both subscriber and publisher into a client class
+        but for now I think it is better to make everything work and then deal with this burocracy"""
     def __init__(self, clientId, broker, port):
         self.broker = broker
         self.port = port
@@ -26,7 +27,7 @@ class mqttPublisher():
 
 class mqttSubscriber():
     '''wrapper class that is used to subscribe data from the raspberrry pi using mqtt'''
-
+    """Different subscriber then the one used on the data handler but a first try put both classes together """
     def __init__(self, clientId, broker, port):
         self.broker = broker
         self.port = port
