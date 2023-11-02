@@ -2,8 +2,8 @@ from mqtt_client import *
 import numpy as np 
 import json
 import time
-import pprint
 import requests
+from alert import *
 
 """ Class that as the name says will handle the data gathered by the sensors. 
     It basically is a mqtt subscriber, that is subscribed to ONLY a specific device. 
@@ -55,6 +55,13 @@ class DataStorer(mqttSubscriber):
         device_id = message_topic.split('/')[1]
         data = json.loads(msg.payload)
         print(data)
+
+        thresholds = {'temperature': (36, 36)}
+        samples = {'temperature': 2} 
+        alert_url = "http://127.0.0.1:1402"
+
+        alert = Alert(thresholds, samples, alert_url, './database.csv') #apart from the database path, all the other info will come from the catalog
+
         for item in data['e']:
             n = item['n']
             u = item['u']
@@ -62,3 +69,4 @@ class DataStorer(mqttSubscriber):
             with open('./database.csv','a') as fd:
                 newRow = device_id + ',' + str(n) + ',' + str(u) + ',' + str(v) + '\n'
                 fd.write(newRow)
+                alert.compute_metric(device_id, n)
