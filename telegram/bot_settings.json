@@ -1,11 +1,24 @@
-{
-    "000000": {
-        "patients": []
+[
+    {
+        "chatID": "5745174399",
+        "devices": [
+            {
+                "deviceID": 7,
+                "name": "Gamballi"
+            },
+            {
+                "deviceID": 8,
+                "name": "jao"
+            }
+        ]
     },
-    "5646053712": {
-        "patients": [
-            "100887",
-            "7885"
+    {
+        "chatID": "80151",
+        "devices": [
+            {
+                "deviceID": 7,
+                "name": "Gamballi"
+            }
         ]
     }
-}
+]
