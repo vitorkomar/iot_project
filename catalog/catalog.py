@@ -7,7 +7,7 @@ class Catalog(object):
     exposed = True
 
     def GET(self, *uri):
-        database = json.load(open(os.path.join(os.path.curdir, 'database.json')))
+        database = json.load(open(os.path.join(os.path.curdir, 'catalogSettings.json')))
         data = database
         for el in uri:
             data = data[el]
@@ -16,13 +16,13 @@ class Catalog(object):
     def POST(self, *uri, **params):
         request_data = cherrypy.request.body.read().decode('utf-8')
         new_data = json.loads(request_data)
-
-        with open(os.path.join(os.path.curdir, 'database.json'),'r+') as file:
+    
+        with open(os.path.join(os.path.curdir, 'catalogSettings.json'),'r+') as file:
             file_data = json.load(file)
     
-        file_data["patients"].update(new_data)
+        file_data["devices"].append(new_data)
 
-        with open(os.path.join(os.path.curdir, 'database.json'), "w") as file:
+        with open(os.path.join(os.path.curdir, 'catalogSettings.json'), "w") as file:
             json.dump(file_data, file, indent = 4)
 
     def PUT(self):

@@ -1,0 +1,24 @@
+[
+    {
+        "chatID": "5745174399",
+        "devices": [
+            {
+                "deviceID": 7,
+                "name": "Gamballi"
+            },
+            {
+                "deviceID": 8,
+                "name": "jao"
+            }
+        ]
+    },
+    {
+        "chatID": "80151",
+        "devices": [
+            {
+                "deviceID": 7,
+                "name": "Gamballi"
+            }
+        ]
+    }
+]

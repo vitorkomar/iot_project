@@ -4,6 +4,7 @@ import json
 import time
 import requests
 from alert import *
+import os 
 
 """ Class that as the name says will handle the data gathered by the sensors. 
     It basically is a mqtt subscriber, that is subscribed to ONLY a specific device. 
@@ -17,7 +18,7 @@ class DataStorer(mqttSubscriber):
     def __init__(self, catalogURL, clientId):
         self.catalogURL = catalogURL
         self.clientId = clientId
-        data = requests.get(self.catalogURL+'/subscriber')
+        data = requests.get(self.catalogURL)
         data = data.json()
         self.broker = data['brokerAddress']
         self.port = 1883 ## hardcoded for now
@@ -33,13 +34,12 @@ class DataStorer(mqttSubscriber):
 
     def updateSettings(self):
         """update local data handler settings and store them in a json file"""
-        conf = json.load(open("./settings.json"))
+        conf = json.load(open(os.path.join(os.path.curdir, 'settings.json')))
         conf['catalogURL'] = self.catalogURL
         conf['brokerAddress'] = self.broker
         conf['port'] = self.port
         conf['topic'] = self.topic
-        conf['id'] = self.clientId
-        with open("./settings.json", "w") as file:
+        with open(os.path.join(os.path.curdir, 'settings.json'), "w") as file:
             json.dump(conf, file, indent = 4)
 
     def run(self):
@@ -54,19 +54,21 @@ class DataStorer(mqttSubscriber):
         message_topic = msg.topic
         device_id = message_topic.split('/')[1]
         data = json.loads(msg.payload)
+        print(device_id)
         print(data)
 
         thresholds = {'temperature': (36, 36)}
         samples = {'temperature': 2} 
         alert_url = "http://127.0.0.1:1402"
 
-        alert = Alert(thresholds, samples, alert_url, './database.csv') #apart from the database path, all the other info will come from the catalog
+        databasePath = os.path.join(os.path.curdir, 'database.csv')
+        alert = Alert(thresholds, samples, alert_url, databasePath) #apart from the database path, all the other info will come from the catalog
 
         for item in data['e']:
             n = item['n']
             u = item['u']
             v = item['v']
-            with open('./database.csv','a') as fd:
-                newRow = device_id + ',' + str(n) + ',' + str(u) + ',' + str(v) + '\n'
+            with open(os.path.join(os.path.curdir, 'database.csv'), "a") as fd:
+                newRow = str(device_id) + ',' + str(n) + ',' + str(u) + ',' + str(v) + '\n'
                 fd.write(newRow)
                 alert.compute_metric(device_id, n)

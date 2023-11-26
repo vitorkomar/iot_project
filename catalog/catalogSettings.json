@@ -1,0 +1,21 @@
+{
+    "brokerAddress": "mqtt.eclipseprojects.io",
+    "baseTopic": "ElderlyMonitoring",
+    "devices": [
+        {
+            "deviceID": 0,
+            "topic": "ElderlyMonitoring/0",
+            "password": "2KCFPO9E"
+        },
+        {
+            "deviceID": 1,
+            "topic": "ElderlyMonitoring/1",
+            "password": "LJUP29IC"
+        },
+        {
+            "deviceID": 2,
+            "topic": "ElderlyMonitoring/2",
+            "password": "ND4ROFXA"
+        }
+    ]
+}

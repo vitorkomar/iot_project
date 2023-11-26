@@ -17,7 +17,7 @@ class TelegramBot():
     def __init__(self, token, catalogURL):
         self.catalogURL = catalogURL
         self.bot = telepot.Bot(token)
-        self.path = os.path.join(os.path.curdir, 'bot_settings.json')
+        self.path = os.path.join(os.path.curdir, 'botSettings.json')
         self.conf = json.load(open(self.path)) #I have put the updated file format on this file - vitor
         self.commands = ['/help: show information and brief instructions about available commands.', 
                          '/connect: connect to a monitoring device, user must provide device ID and password. /connect <DeviceID> <Password>',
