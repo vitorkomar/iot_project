@@ -11,6 +11,10 @@
         "7": {
             "topic": "ElderlyMonitoring/7",
             "password": "HBZSOCL0"
+        },
+        "9": {
+            "topic": "ElderlyMonitoring/9",
+            "password": "abc"
         }
     }
 }
