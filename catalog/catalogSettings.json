@@ -16,6 +16,11 @@
             "deviceID": 2,
             "topic": "ElderlyMonitoring/2",
             "password": "ND4ROFXA"
+        },
+        {
+            "deviceID": 3,
+            "topic": "ElderlyMonitoring/3",
+            "password": "U8JQ9NMG"
         }
     ]
 }

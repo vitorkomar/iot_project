@@ -14,6 +14,9 @@ import os
     My idea was that each device has an ID and password issued on frabication, like a router for instance
         that info will be provided to the telegram bot to connect to the device"""
 
+""" This patient will be really sick 
+    every 6 hours he will have a fever that lasts for 30 mins """
+
 class TrackingDevice():
 
     def __init__(self, catalogURL):
@@ -41,8 +44,6 @@ class TrackingDevice():
         return ''.join(random.sample(chars,len(chars)))[:8]
 
     def updateCatalog(self):
-        #postData = {}
-        #postData[self.deviceID] = {"deviceID":self.deviceID, "topic": self.topic, "password": self.devicePassword}
         data = requests.get(self.catalogURL)
         data = data.json()
         needsUpdate = True
@@ -66,7 +67,7 @@ class TrackingDevice():
             json.dump(conf, file, indent = 4)
             
     def run(self): 
-        fs = np.array([6,36,3600,3600,3600,3600]) # sampling frequencies of each sensor
+        fs = np.array([10,36,3600,3600,3600,3600]) # sampling frequencies of each sensor
         
         #sensor instances
         tempGenerator = DataGenerator(36.6, 0.05, fs[0]) # one sample every 10 min
@@ -81,7 +82,10 @@ class TrackingDevice():
         publisher.start()
 
         timeCounter = 0
+        feverCounter = 0
         while True:
+            if feverCounter == 6: 
+                tempGenerator.setAvg(39)
             if (timeCounter%fs==0).any():
                 # Create the SenML data in JSON format
                 data = {
@@ -126,10 +130,14 @@ class TrackingDevice():
                 }
                 publisher.publish_data(self.topic, data)
             
-            time.sleep(1)
+            time.sleep(1) #1s -> 1min; #1h->60s #6h -> 360s
             timeCounter += 1
-            if timeCounter == 3600:
+            if timeCounter == 60:
                 timeCounter = 0
+                feverCounter += 1
+            if feverCounter == 6 and timeCounter == 30:
+                tempGenerator.setAvg(36)
+                feverCounter = 0
             
         publisher.disconnect()
 

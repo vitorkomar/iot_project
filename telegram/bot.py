@@ -52,12 +52,12 @@ class TelegramBot():
         return False
     
     def verifyPassword(self, chatId, deviceID, givenPassword):
-        data = requests.get(self.catalogURL+'/patients')
+        data = requests.get(self.catalogURL+'/devices')
         data = data.json()
-        if givenPassword == data[deviceID]['password']:
-            return True
-        else: 
-            return False 
+        for device in data:
+            if deviceID == str(device['deviceID']) and givenPassword == device['password']:
+                return True
+        return False 
     
     def registerDevice(self, chatId, deviceID):
         if self.hasID(deviceID):
@@ -108,8 +108,6 @@ class TelegramBot():
             with open(self.path, "w") as file:
                 json.dump(self.conf, file, indent = 4)
             self.bot.sendMessage(chatId, text="Hello, thanks for contacting!\nType /help to see available commands.")
-        
-        
         else:
             if command == '/help': 
                 self.bot.sendMessage(chatId, text='Available commands:')
@@ -123,7 +121,7 @@ class TelegramBot():
                 deviceID = text.split()[1]
                 password = text.split()[2]
                 #if self.hasID(deviceID) and self.verifyPassword(chatId, deviceID, password):
-                if  self.verifyPassword(chatId, deviceID, password):
+                if self.verifyPassword(chatId, deviceID, password):
                     self.registerDevice(chatId, deviceID)
                     self.bot.sendMessage(chatId, text="Succesfully connected to device "+str(deviceID)+".")
                 else:
@@ -185,12 +183,13 @@ class TelegramBot():
 
     
     """We need to finish data analysis in order to properly implement the following methods and check functionality"""
-    def send_fever_message(self, device):
+    def send_fever_message(self, deviceID):
         '''method that sends a message to every chat user 
         that are subscribed to a certatin patient'''
-        for chatId in self.conf:
-            if device in self.conf[chatId]['patients']:
-                self.bot.sendMessage(chatId, "Fever Alert: Please check on the patient!")
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "Fever Alert: Please check patient "+device['name']+"!")
 
 
 class Server():
@@ -219,7 +218,7 @@ class Server():
 if __name__ == '__main__':
 
     token = "6577470521:AAFTej1Dn-sOG6jE6xrYhvr9BHqudhI-SQg"
-    catalogURL = "http://127.0.0.1:8083"
+    catalogURL = "http://127.0.0.1:8084"
     #catalogURL = "http://192.168.11.43:8083"
     
     bot = TelegramBot(token, catalogURL)

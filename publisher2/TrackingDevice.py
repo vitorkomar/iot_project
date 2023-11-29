@@ -64,6 +64,7 @@ class TrackingDevice():
         conf['password'] = self.devicePassword
         with open(os.path.join(os.path.curdir, 'deviceSettings.json'), "w") as file:
             json.dump(conf, file, indent = 4)
+            
     def run(self): 
         fs = np.array([6,36,3600,3600,3600,3600]) # sampling frequencies of each sensor
         

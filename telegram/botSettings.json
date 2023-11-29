@@ -9,6 +9,10 @@
             {
                 "deviceID": 8,
                 "name": "jao"
+            },
+            {
+                "deviceID": "3",
+                "name": "Adenor"
             }
         ]
     },

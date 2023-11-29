@@ -39,6 +39,6 @@ if __name__ == '__main__':
     webService = Catalog()
     cherrypy.tree.mount(webService, '/', conf)
     #cherrypy.config.update({'server.socket_host': '0.0.0.0'})
-    cherrypy.config.update({'server.socket_port': 8083})
+    cherrypy.config.update({'server.socket_port': 8084})
     cherrypy.engine.start()
     cherrypy.engine.block()

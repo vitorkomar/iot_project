@@ -57,8 +57,8 @@ class DataStorer(mqttSubscriber):
         print(device_id)
         print(data)
 
-        thresholds = {'temperature': (36, 36)}
-        samples = {'temperature': 2} 
+        thresholds = {'temperature': (35, 37)}
+        samples = {'temperature': 3} ## afects number of alerts  
         alert_url = "http://127.0.0.1:1402"
 
         databasePath = os.path.join(os.path.curdir, 'database.csv')
