@@ -31,3 +31,10 @@ def calculate_std(device, metric,n_samples):
     df = df[(df['device_id']==device) & (df['n']==metric)]
     df = df.tail(n_samples)
     return df['v'].std()
+
+def getLast(device, metric):
+    df = pd.read_csv('database.csv')
+    device = int(device) #just to make sure the device is an integer
+    df = df[(df['device_id']==device) & (df['n']==metric)]
+    df = df.tail(1)
+    return df['v'].values[0]

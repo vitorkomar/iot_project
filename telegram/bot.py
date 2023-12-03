@@ -17,8 +17,10 @@ class TelegramBot():
     def __init__(self, token, catalogURL):
         self.catalogURL = catalogURL
         self.bot = telepot.Bot(token)
-        self.path = os.path.join(os.path.curdir, 'botSettings.json')
-        self.conf = json.load(open(self.path)) #I have put the updated file format on this file - vitor
+        self.chatsPath = os.path.join(os.path.curdir, 'chatsInfo.json')
+        self.conf = json.load(open(self.chatsPath)) 
+        self.medsPath = os.path.join(os.path.curdir, 'medicineInfo.json')
+        self.medsConf = json.load(open(self.medsPath)) 
         self.commands = ['/help: show information and brief instructions about available commands.', 
                          '/connect: connect to a monitoring device, user must provide device ID and password. /connect <DeviceID> <Password>',
                          '/associate: associate a device to the patient it is monitoring, user must provide device ID and patient name. /associate <DeviceID> <Name>',
@@ -27,7 +29,6 @@ class TelegramBot():
                          '/stopMonitoring: stop monitoring the status of a patient given its name and associated device ID. /stopMonitoring <DeviceID> <Name>'] 
         ## need to better define check
         MessageLoop(self.bot, {'chat': self.on_chat_message}).run_as_thread()
-
 
     def checkNewChatID(self, chatId):
         '''checks if the chat ID has already connected with the bot, should return true if it is the first time'''
@@ -66,9 +67,8 @@ class TelegramBot():
             for el in self.conf: 
                 if el['chatID'] == chatId:
                     el['devices'].append({'deviceID': deviceID})
-                    with open(self.path, "w") as file:
+                    with open(self.chatsPath, "w") as file:
                         json.dump(self.conf, file, indent = 4)
-
 
     def associateDevice(self, chatId, deviceID, patientName):
         for el in self.conf:
@@ -76,9 +76,8 @@ class TelegramBot():
                 for device in el['devices']:
                     if device['deviceID']==deviceID:
                         device['name'] = patientName
-                        with open(self.path, 'w') as file:
+                        with open(self.chatsPath, 'w') as file:
                             json.dump(self.conf, file, indent=4)
-
                 
     def isMonitored(self, chatId, name):
         '''returns whether or not a certain chat is monitoring a device'''
@@ -87,15 +86,22 @@ class TelegramBot():
                 for device in el['devices']:
                     if device['name'] == name:
                         return True
-
         return False
 
-    
     def checkPatient(self, metric, patientName):
         '''method that send a get request to the data analysis rest server to get data'''
         #still not implemented
         pass
 
+    def updateMedicineSchedule(self, patientName, medicineName, period, firstTaken):
+        newMedicine = {
+                "medicineName": medicineName,
+                "period": period,
+                "firstTaken": firstTaken
+            }
+        for patient in self.medsConf:
+            if patient['name'] == patientName:
+                patient['medicines'].append(newMedicine)
 
     def on_chat_message(self, msg):
         content_type, chat_type, chatId = telepot.glance(msg)
@@ -105,7 +111,7 @@ class TelegramBot():
 
         if self.checkNewChatID(chatId):
             self.conf.append({"chatID": chatId, "devices": []})
-            with open(self.path, "w") as file:
+            with open(self.chatsPath, "w") as file:
                 json.dump(self.conf, file, indent = 4)
             self.bot.sendMessage(chatId, text="Hello, thanks for contacting!\nType /help to see available commands.")
         else:
@@ -120,7 +126,6 @@ class TelegramBot():
             elif command == '/connect':
                 deviceID = text.split()[1]
                 password = text.split()[2]
-                #if self.hasID(deviceID) and self.verifyPassword(chatId, deviceID, password):
                 if self.verifyPassword(chatId, deviceID, password):
                     self.registerDevice(chatId, deviceID)
                     self.bot.sendMessage(chatId, text="Succesfully connected to device "+str(deviceID)+".")
@@ -140,19 +145,15 @@ class TelegramBot():
                 for el in self.conf:
                     if el['chatID'] == chatId:
                         devicesList = el['devices']
-                
-
                 if len(devicesList) > 0:
                     patientsList = '```\n'
                     patientsList += 'ID : Name\n'
-
                     for device in devicesList:
                         patientID = device['deviceID']
                         patientName = device['name'] 
                         patientsList += str(patientID)+' : '+str(patientName)+'\n'
                     patientsList += '```'
                     self.bot.sendMessage(chatId, text=patientsList, parse_mode='MarkdownV2')
-
                 else: 
                     self.bot.sendMessage(chatId, text='No patient is beeing monitored at the moment.')
 
@@ -173,7 +174,7 @@ class TelegramBot():
                                 if device['name'] == patientName:
                                         devices.remove(device)
                     
-                    with open(self.path, "w") as file:
+                    with open(self.chatsPath, "w") as file:
                         json.dump(self.conf, file, indent = 4)
                     self.bot.sendMessage(chatId, text="Patient "+str(patientName)+' is no longer being monitored.')
                     self.bot.sendMessage(chatId, text="Device "+str(deviceID)+" is no longer connected.")
@@ -181,7 +182,6 @@ class TelegramBot():
             else:
                 self.bot.sendMessage(chatId, text="Inavlid command, type /help to see available commands.")
 
-    
     """We need to finish data analysis in order to properly implement the following methods and check functionality"""
     def send_fever_message(self, deviceID):
         '''method that sends a message to every chat user 

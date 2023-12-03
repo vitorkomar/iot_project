@@ -22,5 +22,43 @@
             "topic": "ElderlyMonitoring/3",
             "password": "U8JQ9NMG"
         }
+    ],
+    "metrics": [
+        {
+            "metric": "temperature",
+            "normalMax": 37,
+            "normalMin": 35,
+            "samplingFrequency": 10
+        },
+        {
+            "metric": "accelerometer",
+            "normalMax": -1,
+            "normalMin": -1,
+            "samplingFrequency": -1
+        },
+        {
+            "metric": "glucose",
+            "normalMax": -1,
+            "normalMin": -1,
+            "samplingFrequency": -1
+        },
+        {
+            "metric": "systole",
+            "normalMax": -1,
+            "normalMin": -1,
+            "samplingFrequency": -1
+        },
+        {
+            "metric": "diastole",
+            "normalMax": -1,
+            "normalMin": -1,
+            "samplingFrequency": -1
+        },
+        {
+            "metric": "saturation",
+            "normalMax": -1,
+            "normalMin": -1,
+            "samplingFrequency": -1
+        }
     ]
 }
