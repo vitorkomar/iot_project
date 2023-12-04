@@ -411,6 +411,7 @@ class Server(object):
         device = str(data['deviceID'])
         metric = data['metric']
         alertType = data['alertType'] #above or below
+        print(metric)
 
         if metric=='temperature' and alertType=='above':
             print('alert sent')
@@ -430,12 +431,12 @@ class Server(object):
         elif metric=='pressure' and alertType=='below':
             print('alert sent')
             self.bot.send_low_pressure_alert(device)
-        elif metric=='saturarion' and alertType=='above':
+        elif metric=='saturation' and alertType=='above':
             print('alert sent')
-            self.bot.send_high_saturarion_alert(device)
-        elif metric=='saturarion' and alertType=='below':
+            self.bot.send_high_saturation_alert(device)
+        elif metric=='saturation' and alertType=='below':
             print('alert sent')
-            self.bot.send_low_saturarion_alert(device)
+            self.bot.send_low_saturation_alert(device)
         elif metric=='fall':
             print('alert sent')
             self.bot.send_fall_alert(device)

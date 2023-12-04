@@ -78,19 +78,24 @@ class DataStorer(mqttSubscriber):
             data[pointName] = {'n':n, 'u':u, 'v':v, 'deviceID':device_id}
             i += 1
 
+            #we still need to make the fall and pressure alerts here
             if v > self.thresholds[n][1]:
-                url = self.alert_url + '/alert/' + str(device_id) + '/' + n + '/' + 'above'
+                print(n)
+                package = {'deviceID':device_id, 'metric':n, 'alertType':'above'}
                 try:
-                    requests.get(url) #sending alert to telegram bot
+                    requests.put(self.alert_url, json=package) #sending alert to telegram bot
+                    print('Alert sent')
+                    print(package)
                 except:
                     print("Couldn't send alert")
             elif v < self.thresholds[n][0]:
-                url = self.alert_url + '/alert/' + str(device_id) + '/' + n + '/' + 'under'
+                package = {'deviceID':device_id, 'metric':n, 'alertType':'below'}
                 try:
-                    requests.get(url) #sending alert to telegram bot
+                    requests.put(self.alert_url, json=package) #sending alert to telegram bot
+                    print('Alert sent')
+                    print(package)
                 except:
                     print("Couldn't send alert")
-    
         
         #uploading the data to influx db
         for key in data:
