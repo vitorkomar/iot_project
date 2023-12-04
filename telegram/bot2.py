@@ -330,39 +330,118 @@ class TelegramBot():
             else:
                 self.bot.sendMessage(chatId, text="Inavlid command, type /help to see available commands.")
 
-    """We need to finish data analysis in order to properly implement the following methods and check functionality"""
-    def send_fever_message(self, deviceID):
+
+    def send_high_temp_alert(self, deviceID):
         '''method that sends a message to every chat user 
         that are subscribed to a certatin patient'''
         for user in self.conf:
             for device in user['devices']:
+                if device['deviceID'] == deviceID:
+                    self.bot.sendMessage(user['chatID'], "High Temperature Alert: Please check patient "+device['name']+"!")
+
+
+    def send_low_temp_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
                 if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "Fever Alert: Please check patient "+device['name']+"!")
+                    self.bot.sendMessage(user['chatID'], "Low Temperature Alert: Please check patient "+device['name']+"!")
 
 
-class Server():
+    def send_high_glucose_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "High Glucose Alert: Please check patient "+device['name']+"!")
 
+
+    def send_low_glucose_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "Low Glucose Alert: Please check patient "+device['name']+"!")
+
+
+    def send_high_pressure_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "High Blood Pressure Alert: Please check patient "+device['name']+"!")
+
+
+    def send_low_pressure_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "Low Blood Pressure Alert: Please check patient "+device['name']+"!")
+
+
+    def send_high_saturation_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "High Saturation Alert: Please check patient "+device['name']+"!")
+
+
+    def send_low_saturation_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "Low Saturation Alert: Please check patient "+device['name']+"!")
+
+    
+    def send_fall_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "Fall Alert: Please check patient "+device['name']+"!")
+
+
+
+class Server(object):
+    exposed = True
     def __init__(self, bot):
         self.bot = bot
 
-    @cherrypy.expose
-    def alert(self, *uri):
-        '''this method will be used to receive every method, it will also get the metric and call the
-        right method of the bot'''
-        device = str(uri[0])
-        metric = str(uri[1])
-        print(uri)
-        #for now every alert will be fever so, just to test it
-        #the specific method for each alert will have to be specified 
-        self.bot.send_fever_message(device)
+    def PUT(self, *uri, **params):
+        '''this will receive the alerts and call the correct bot method to send the message'''
+
+        request_data = cherrypy.request.body.read().decode('utf-8')
+        data = json.loads(request_data)
+
+        device = str(data['deviceID'])
+        metric = data['metric']
+        alertType = data['alertType'] #above or below
+
+        if metric=='temperature' and alertType=='above':
+            print('alert sent')
+            self.bot.send_high_temp_alert(device)
+        elif metric=='temperature' and alertType=='below':
+            print('alert sent')
+            self.bot.send_low_temp_alert(device)
+        elif metric=='glucose' and alertType=='above':
+            print('alert sent')
+            self.bot.send_high_glucose_alert(device)
+        elif metric=='glucose' and alertType=='below':
+            print('alert sent')
+            self.bot.send_low_glucose_alert(device)
+        elif metric=='pressure' and alertType=='above':
+            print('alert sent')
+            self.bot.send_high_pressure_alert(device)
+        elif metric=='pressure' and alertType=='below':
+            print('alert sent')
+            self.bot.send_low_pressure_alert(device)
+        elif metric=='saturarion' and alertType=='above':
+            print('alert sent')
+            self.bot.send_high_saturarion_alert(device)
+        elif metric=='saturarion' and alertType=='below':
+            print('alert sent')
+            self.bot.send_low_saturarion_alert(device)
+        elif metric=='fall':
+            print('alert sent')
+            self.bot.send_fall_alert(device)
+            
+
         
-        '''
-        if metric == 'temperature':
-            self.bot.send_fever_alert(device)
-        elif metric == 'glucose':
-            self.bot.send_glucose_alert(device)'''
-        
-    
 if __name__ == '__main__':
 
     token = "6577470521:AAFTej1Dn-sOG6jE6xrYhvr9BHqudhI-SQg"
@@ -370,6 +449,16 @@ if __name__ == '__main__':
     #catalogURL = "http://192.168.11.43:8083"
     
     bot = TelegramBot(token, catalogURL)
+    conf = {
+        '/': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tool.session.on': True
+        }
+    }
+    webService = Server(bot)
+    cherrypy.tree.mount(webService, '/', conf)
+    cherrypy.config.update({'server.socket_host': '0.0.0.0'})
     cherrypy.config.update({'server.socket_port': 1402})
-    cherrypy.quickstart(Server(bot))
+    cherrypy.engine.start()
+    cherrypy.engine.block()
     

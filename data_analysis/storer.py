@@ -1,5 +1,6 @@
 from DataStorer import *
 import json
+import requests
 
 """Basically run an instance of the data storer 
     there shall be one instance for each patient

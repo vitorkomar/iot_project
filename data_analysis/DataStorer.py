@@ -3,18 +3,17 @@ import numpy as np
 import json
 import time
 import requests
-from alert import *
 import os 
+from influxdb_client_3 import InfluxDBClient3, Point
 
-""" Class that as the name says will handle the data gathered by the sensors. 
-    It basically is a mqtt subscriber, that is subscribed to ONLY a specific device. 
-    A device is the wearable that will keep track of the elderly status, can be seen as the sensors. 
-    At each publication on the topic that it is subscribed it will store the new value in its database,
-        if the amount of data surpass a threshold it removes the oldest sample and store the new one 
-        (we need to define the threshold based on how much data we want to store, one month of data, two weeks...)
-    When requested it provides statics of the stored data """
 
 class DataStorer(mqttSubscriber): 
+    """ Class that as the name says will handle the data gathered by the sensors. 
+    It basically is a mqtt subscriber, that is subscribed to ONLY a specific device. 
+    A device is the wearable that will keep track of the elderly status, can be seen as the sensors. 
+    At each publication on the topic that it is subscribed it will store the new value in its database """
+
+
     def __init__(self, catalogURL, clientId):
         self.catalogURL = catalogURL
         self.clientId = clientId
@@ -31,6 +30,19 @@ class DataStorer(mqttSubscriber):
                           'systole':[],
                           'diastole':[],
                           'saturation':[]}
+
+        self.alert_url = requests.get(self.catalogURL + '/alert_url').json()
+        self.metricsInfo = requests.get(self.catalogURL + '/metrics').json()
+        self.thresholds = {}
+        for el in self.metricsInfo:
+            self.thresholds[el['metric']] = (el['normalMin'], el['normalMax']) 
+            #associating each metric to a tuple representing the thresholds
+
+        self.influxToken = requests.get(self.catalogURL + '/influxToken').json()
+        self.influxOrg = requests.get(self.catalogURL + '/influxOrg').json()
+        self.influxHost = requests.get(self.catalogURL + '/influxHost').json()
+        self.influxDatabase = requests.get(self.catalogURL + '/influxDatabase').json()
+        self.influxClient =  InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg)
 
     def updateSettings(self):
         """update local data handler settings and store them in a json file"""
@@ -53,22 +65,41 @@ class DataStorer(mqttSubscriber):
             will be called everytime a message is published on the subscribed topic"""
         message_topic = msg.topic
         device_id = message_topic.split('/')[1]
-        data = json.loads(msg.payload)
-        print(device_id)
-        print(data)
+        dataMSG = json.loads(msg.payload)
 
-        thresholds = {'temperature': (35, 37)}
-        samples = {'temperature': 3} ## afects number of alerts  
-        alert_url = "http://127.0.0.1:1402"
+        i = 1
+        data = {}
+        for item in dataMSG['e']:
+            n = item['n'] #getting the name of the metric
+            u = item['u'] #getting the unit of the metric
+            v = item['v'] #gettign the value of the metric
+            
+            pointName = 'point' + str(i)
+            data[pointName] = {'n':n, 'u':u, 'v':v, 'deviceID':device_id}
+            i += 1
 
-        databasePath = os.path.join(os.path.curdir, 'database.csv')
-        alert = Alert(thresholds, samples, alert_url, databasePath) #apart from the database path, all the other info will come from the catalog
-
-        for item in data['e']:
-            n = item['n']
-            u = item['u']
-            v = item['v']
-            with open(os.path.join(os.path.curdir, 'database.csv'), "a") as fd:
-                newRow = str(device_id) + ',' + str(n) + ',' + str(u) + ',' + str(v) + '\n'
-                fd.write(newRow)
-                alert.compute_metric(device_id, n)
+            if v > self.thresholds[n][1]:
+                url = self.alert_url + '/alert/' + str(device_id) + '/' + n + '/' + 'above'
+                try:
+                    requests.get(url) #sending alert to telegram bot
+                except:
+                    print("Couldn't send alert")
+            elif v < self.thresholds[n][0]:
+                url = self.alert_url + '/alert/' + str(device_id) + '/' + n + '/' + 'under'
+                try:
+                    requests.get(url) #sending alert to telegram bot
+                except:
+                    print("Couldn't send alert")
+    
+        
+        #uploading the data to influx db
+        for key in data:
+            metric = data[key]['n']
+            point = (
+                Point(metric)
+                .tag("deviceID", data[key]["deviceID"])
+                .field(data[key]["u"], data[key]["v"])
+            )
+            self.influxClient.write(database=self.influxDatabase, record=point)
+            print('uploaded data')
+            
