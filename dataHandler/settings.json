@@ -1,0 +1,6 @@
+{
+    "catalogURL": "http://127.0.0.1:8084",
+    "brokerAddress": "mqtt.eclipseprojects.io",
+    "port": 1883,
+    "topic": "ElderlyMonitoring/#"
+}
