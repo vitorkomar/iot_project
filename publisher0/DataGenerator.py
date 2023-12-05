@@ -7,10 +7,12 @@ import matplotlib.pyplot as plt
 
 class DataGenerator():
 
-    def __init__(self, average, sigma, samplingFrequency):
+    def __init__(self, average, sigma, samplingFrequency, n, u):
         self.avg = average
         self.sigma = sigma
         self.samplingFrequency = samplingFrequency
+        self.n = n
+        self.u = u
         self.currSample = None
     
     def setAvg(self, average):
@@ -29,6 +31,7 @@ class DataGenerator():
         """ draw a sample every timeInstant 
             timeInstant can be seen as sampling frequency
             samples are drawn from a normal distribution with mean self.avg and std self.sigma"""
-        if (timeInstant%self.samplingFrequency) == 0 or self.currSample is None:
-            self.currSample = self.avg + self.sigma*np.random.randn()
+        #if (timeInstant%self.samplingFrequency) == 0 or self.currSample is None:
+            #self.currSample = self.avg + self.sigma*np.random.randn()
+        self.currSample = self.avg + self.sigma*np.random.randn()
         return self.currSample

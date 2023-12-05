@@ -6,7 +6,7 @@ import random
 import requests
 
 #conf = json.load(open("settings.json"))
-conf = json.load(open("publisher\settings.json"))
+conf = json.load(open("publisher/settings.json"))
 topic = conf["baseTopic"]
 broker = conf["brokerAddress"]
 port = conf["port"]
@@ -78,11 +78,6 @@ while True:
                     "n": "saturation",
                     "u": "%",
                     "v": satGenerator.drawSample(timeCounter)
-                },
-                {
-                    "n": "time",
-                    "u": "s",
-                    "v": timeCounter
                 }
             ]
         }
