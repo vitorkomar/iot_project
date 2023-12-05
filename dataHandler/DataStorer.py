@@ -84,8 +84,6 @@ class DataStorer(mqttSubscriber):
 
                 if n == 'accelerometer':
                     n = 'fall'
-                elif n == 'diastole' or n == 'systole':
-                    n = 'pressure'
                 package = {'deviceID':device_id, 'metric':n, 'alertType':'above'}
         
                 try:
@@ -95,8 +93,6 @@ class DataStorer(mqttSubscriber):
                 except:
                     print("Couldn't send alert")
             elif v < self.thresholds[n][0]:
-                if n == 'diastole' or n == 'systole':
-                    n = 'pressure'
                 package = {'deviceID':device_id, 'metric':n, 'alertType':'below'}
                 try:
                     requests.put(self.alert_url, json=package) #sending alert to telegram bot

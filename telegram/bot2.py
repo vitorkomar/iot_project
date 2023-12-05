@@ -374,6 +374,32 @@ class TelegramBot():
                 if deviceID == device['deviceID']:
                     self.bot.sendMessage(user['chatID'], "Low Blood Pressure Alert: Please check patient "+device['name']+"!")
 
+    def send_high_systole_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "High Sysolte Alert: Please check patient "+device['name']+"!")
+
+
+    def send_low_systole_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "Low Systole Alert: Please check patient "+device['name']+"!")
+
+    def send_high_diastole_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "High Diastole Alert: Please check patient "+device['name']+"!")
+
+
+    def send_low_diastole_alert(self, deviceID):
+        for user in self.conf:
+            for device in user['devices']:
+                if deviceID == device['deviceID']:
+                    self.bot.sendMessage(user['chatID'], "Low Diastole Alert: Please check patient "+device['name']+"!")
+
 
     def send_high_saturation_alert(self, deviceID):
         for user in self.conf:
@@ -425,12 +451,18 @@ class Server(object):
         elif metric=='glucose' and alertType=='below':
             print('alert sent')
             self.bot.send_low_glucose_alert(device)
-        elif metric=='pressure' and alertType=='above':
+        elif metric=='systole' and alertType=='above':
             print('alert sent')
-            self.bot.send_high_pressure_alert(device)
-        elif metric=='pressure' and alertType=='below':
+            self.bot.send_high_systole_alert(device)
+        elif metric=='systole' and alertType=='below':
             print('alert sent')
-            self.bot.send_low_pressure_alert(device)
+            self.bot.send_low_systole_alert(device)
+        elif metric=='diastole' and alertType=='above':
+            print('alert sent')
+            self.bot.send_high_diastole_alert(device)
+        elif metric=='diastole' and alertType=='below':
+            print('alert sent')
+            self.bot.send_low_diastole_alert(device)
         elif metric=='saturation' and alertType=='above':
             print('alert sent')
             self.bot.send_high_saturation_alert(device)
