@@ -36,7 +36,7 @@
             "samplingFrequency": 10
         },
         {
-            "metric": "accelerometer",
+            "metric": "acceleration",
             "normalMax": -1,
             "normalMin": -1,
             "samplingFrequency": -1
@@ -49,14 +49,14 @@
         },
         {
             "metric": "systole",
-            "normalMax": -1,
-            "normalMin": -1,
+            "normalMax": 140,
+            "normalMin": 90,
             "samplingFrequency": -1
         },
         {
             "metric": "diastole",
-            "normalMax": -1,
-            "normalMin": -1,
+            "normalMax": 90,
+            "normalMin": 60,
             "samplingFrequency": -1
         },
         {

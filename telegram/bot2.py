@@ -274,7 +274,8 @@ class TelegramBot():
                     self.bot.sendMessage(chatId, text=stautsList, parse_mode='MarkdownV2')
                 
             elif command == '/history':
-                infoFromCatalog = 'http://192.168.11.158:1400' #needs to be updated
+                #infoFromCatalog = 'http://192.168.11.158:1400' #needs to be updated
+                infoFromCatalog = 'http://0.0.0.0:1400'
                 if self.isMonitored(chatId, self.getName(chatId, text.split()[1])) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check history of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 elif text.split()[2] not in ['temperature', 'glucose', 'systole', 'diastole',  'saturation']:

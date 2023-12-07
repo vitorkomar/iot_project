@@ -73,13 +73,14 @@ class DataStorer(mqttSubscriber):
             n = item['n'] #getting the name of the metric
             u = item['u'] #getting the unit of the metric
             v = item['v'] #gettign the value of the metric
+            t = item['t']
             
             pointName = 'point' + str(i)
-            data[pointName] = {'n':n, 'u':u, 'v':v, 'deviceID':device_id}
+            data[pointName] = {'n':n, 'u':u, 'v':v, 'deviceID':device_id, 't': t}
             i += 1
 
-            #we still need to make pressure alerts here
-            if v > self.thresholds[n][1]:
+            
+        if v > self.thresholds[n][1]:
                 print(n)
 
                 if n == 'accelerometer':
@@ -92,7 +93,8 @@ class DataStorer(mqttSubscriber):
                     print(package)
                 except:
                     print("Couldn't send alert")
-            elif v < self.thresholds[n][0]:
+        
+        elif v < self.thresholds[n][0]:
                 package = {'deviceID':device_id, 'metric':n, 'alertType':'below'}
                 try:
                     requests.put(self.alert_url, json=package) #sending alert to telegram bot
@@ -107,7 +109,9 @@ class DataStorer(mqttSubscriber):
             point = (
                 Point(metric)
                 .tag("deviceID", data[key]["deviceID"])
-                .field(data[key]["u"], data[key]["v"])
+                .field("unit", data[key]["u"])
+                .field("value", data[key]["v"])
+                .field("pubTime", data[key]["t"])
             )
             self.influxClient.write(database=self.influxDatabase, record=point)
             print('uploaded data')

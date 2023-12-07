@@ -1,7 +1,12 @@
 [
     {
         "deviceID": "0",
-        "name": "Joel",
+        "name": "lula",
+        "medicines": []
+    },
+    {
+        "deviceID": "0",
+        "name": "lula",
         "medicines": []
     }
 ]

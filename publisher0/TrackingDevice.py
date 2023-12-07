@@ -5,6 +5,7 @@ from DataGenerator import *
 import random
 import requests
 import os 
+from time import strftime, localtime
 
 """ Class that simulates the sensors that will gather info about patients 
     It basically is a mqtt publisher, that publishes ONLY on a specific topic. 
@@ -67,11 +68,11 @@ class TrackingDevice():
             
     def run(self): 
         #fs = np.array([6,36,3600,3600,3600,3600]) # sampling frequencies of each sensor
-        fs = np.array([6,12,7,8,8,21])
+        fs = np.array([1,12,7,8,8,21])
         #sensor instances
         #tempGenerator = DataGenerator(36.6, 0.05, fs[0], 'temperature', 'celsius') # one sample every 10 min
         tempGenerator = DataGenerator(39, 0.05, fs[0], 'temperature', 'celsius')
-        accGenerator = DataGenerator(1, 0, fs[1], 'accelerometer', 'm/s2') # one sample every ? min
+        accGenerator = DataGenerator(1, 0, fs[1], 'acceleration', 'm/s2') # one sample every ? min
         glucGenerator = DataGenerator(99, 0.85, fs[2], 'glucose', 'mg/dl') # one sample every 60 min
         #systoleGenerator = DataGenerator(124.6, 1.82, fs[3]) # one sample every 60 min
         #diastoleGenerator = DataGenerator(77.7, 0.94, fs[4]) # one sample every 60 min
@@ -94,7 +95,8 @@ class TrackingDevice():
                     data["e"].append({
                             "n": g.n,
                             "u": g.u,
-                            "v": g.drawSample(timeCounter)
+                            "v": g.drawSample(timeCounter),
+                            "t": strftime('%Y-%m-%d %H:%M:%S', localtime(time.time()))
                         })
                 publisher.publish_data(self.topic, data)
                 print(data)
@@ -104,6 +106,8 @@ class TrackingDevice():
             timeCounter += 1
             if timeCounter == 3600:
                 timeCounter = 0
+            if timeCounter == 145:
+                break
             
         publisher.disconnect()
 

@@ -2,6 +2,11 @@
     {
         "chatID": "5646053712",
         "devices": [
+            {
+                "deviceID": "0",
+                "allowReminders": true,
+                "name": "lula"
+            }
         ]
     },
     {

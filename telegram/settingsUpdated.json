@@ -10,3 +10,7 @@
         }
     }
 }
+
+patient : [
+    {chatID: 50000, 'patientID':7, name:joao}
+]
