@@ -1,9 +1,11 @@
 {
+    "statsURL" : "http://statistics:8050",
+    "plotterURL" : "http://plotter:1400",
     "influxToken" : "JS6wfmURh1TfcO9oaGFrDtl2lSa7OxDxm5DJ88BG3jhgMy_WtCglNZUlMQ4qd7c8oIcERwDKzaaoviHACnpQmA==",
     "influxOrg" : "Dev",
     "influxHost" : "https://eu-central-1-1.aws.cloud2.influxdata.com",
     "influxDatabase" : "test",
-    "alert_url" : "http://127.0.0.1:1402",
+    "alert_url" : "http://telegrambot:1402",
     "brokerAddress": "mqtt.eclipseprojects.io",
     "baseTopic": "ElderlyMonitoring",
     "devices": [

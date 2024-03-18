@@ -2,7 +2,7 @@ import json
 import cherrypy
 import os
 
-class Catalog(object):
+class Catalog(object):   
     '''Class for the catalog server'''
     exposed = True
 
