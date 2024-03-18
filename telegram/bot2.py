@@ -128,8 +128,6 @@ class TelegramBot():
                         return True
         return False
 
-    def checkPatient(self, metric, patientName):
-        '''method that send a get request to the data analysis rest server to get data'''
         
     def bookMedicineSchedule(self, data, startTime):
         newMedicine = {
@@ -260,22 +258,43 @@ class TelegramBot():
                 if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check stauts of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 else:
-                    infoFromCatalog = 'http://192.168.11.158:1001' #needs to be updated
-                    stautsList = '```\n'
-                    stautsList += str(patientName)+' status\n'
+                    statsURL = requests.get(self.catalogURL+"/statsURL").json()
+                    url = statsURL+'/check/'+'/'.join(text.split()[1:])
+                    stats = requests.get(url).json()
+                    message = '```\n'
+                    message += 'Metric | Value \n'
                     for metric in ['temperature', 'glucose', 'systole', 'diastole',  'saturation']:
-                        url = infoFromCatalog+'/last/'+str(deviceID)+'/'+metric+'/day'
-                        value = requests.get(url)
-                        value = value.json()
-                        absolute = str(value).split('.')[0]
-                        comma = str(value).split('.')[1][0:2]
-                        stautsList += str(metric)+' : '+absolute+'.'+comma+'\n'
-                    stautsList += '```'
-                    self.bot.sendMessage(chatId, text=stautsList, parse_mode='MarkdownV2')
-                
+                        value = stats[metric]
+                        message += metric + f" | {value:.2f}\n"
+                    message += '```'
+                    self.bot.sendMessage(chatId, text=message, parse_mode='MarkdownV2')
+            
+            elif command == '/statistics':
+                deviceID = text.split()[1]
+                patientName = self.getName(chatId, text.split()[1])
+                if self.isMonitored(chatId, patientName) == False:
+                    self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check stauts of monitored patients. Please type /monitoring to see patients beeing monitored.')
+                elif text.split()[2] not in ['month', 'week', 'day', 'hour']:
+                    self.bot.sendMessage(chatId, text='Chosen time interval is not avaiable. Available time intervals are: month, week, day, hour. Please choose a valid time interval.')
+                else:
+                    statsURL = requests.get(self.catalogURL+"/statsURL").json()
+                    url = statsURL+'/statistics/'+'/'.join(text.split()[1:])
+                    print(url)
+                    stats = requests.get(url).json()
+                    metrics = ['temperature', 'glucose', 'diastole', 'systole', 'saturation']
+                    message = '```\n'
+                    message += 'Metric | Mean | Std\n'
+                    for metric in metrics:
+                        mean = stats[metric]['mean']
+                        std = stats[metric]['std']
+                        message += metric + f" | {mean:.2f} | {std:.2f} \n"
+                    message += '```'
+                    self.bot.sendMessage(chatId, text=message, parse_mode='MarkdownV2')
+                                
+    
             elif command == '/history':
-                #infoFromCatalog = 'http://192.168.11.158:1400' #needs to be updated
-                infoFromCatalog = 'http://0.0.0.0:1400'
+                plotterURL = requests.get(self.catalogURL+"/plotterURL").json()
+                
                 if self.isMonitored(chatId, self.getName(chatId, text.split()[1])) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check history of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 elif text.split()[2] not in ['temperature', 'glucose', 'systole', 'diastole',  'saturation']:
@@ -283,7 +302,7 @@ class TelegramBot():
                 elif text.split()[3] not in ['month', 'week', 'day', 'hour']:
                     self.bot.sendMessage(chatId, text='Chosen time interval is not avaiable. Available time intervals are: month, week, day, hour. Please choose a valid time interval.')
                 else:
-                    url = infoFromCatalog+'/'+'/'.join(text.split()[1:])
+                    url = plotterURL+'/'+'/'.join(text.split()[1:])
                     image = requests.get(url)
                     image = image.content
                     with open('image.jpg', "wb") as f:
@@ -478,9 +497,9 @@ class Server(object):
         
 if __name__ == '__main__':
 
-    token = "6577470521:AAFTej1Dn-sOG6jE6xrYhvr9BHqudhI-SQg"
-    catalogURL = "http://127.0.0.1:8084"
-    #catalogURL = "http://192.168.11.43:8083"
+    settings = json.load(open("settings.json"))
+    token = settings["token"]
+    catalogURL = settings["catalogURL"]
     
     bot = TelegramBot(token, catalogURL)
     conf = {
