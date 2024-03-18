@@ -6,8 +6,7 @@ import requests
     there shall be one instance for each patient
     my idea is that it will be running on the wearable as soon as it turns on"""
 
-catalogURL = "http://127.0.0.1:8084"
-#catalogURL = "http://192.168.11.238:8083"
+catalogURL = json.load(open("settings.json"))["catalogURL"]
 
 storer = DataStorer(catalogURL, 10)
 storer.updateSettings()
