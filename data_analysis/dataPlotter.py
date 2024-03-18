@@ -29,6 +29,7 @@ class dataPlotter(object):
         metric = uri[1]
         timeframe = uri[2]
 
+
         query = """SELECT *
         FROM '""" + str(metric) + """' 
         WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
@@ -91,7 +92,8 @@ if __name__ == '__main__':
         }
     }
 
-    catalogURL = "http://127.0.0.1:8084"
+
+    catalogURL = json.load(open("settings.json"))["catalogURL"]
 
     webService = dataPlotter(catalogURL)
     cherrypy.tree.mount(webService, '/', conf)
