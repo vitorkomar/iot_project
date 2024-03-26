@@ -23,16 +23,16 @@ class TelegramBot():
         self.conf = json.load(open(self.chatsPath)) 
         self.medsPath = os.path.join(os.path.curdir, 'medicineInfo.json')
         self.medsConf = json.load(open(self.medsPath)) 
-        self.reminders = [] ## needed to keep track of type telepot.Event() if stored in json or similar will the typing will be lost
+        self.reminders = self.loadReminders() 
         self.commands = ['/help: show information and brief instructions about available commands.', 
                          '/connect: connect to a monitoring device, user must provide device ID and password. /connect <DeviceID> <Password>',
                          '/associate: associate a device to the patient it is monitoring, user must provide device ID and patient name. /associate <DeviceID> <Name>',
-                         '/setRemindersOptions: choose to receive medicine reminders or not (default is to receive). /setReminderOptions <False>'
+                         '/setReminderOptions: choose to receive medicine reminders or not (default is to receive) for a given patient. /setReminderOptions <PatientName> <False>',
                          '/monitoring: get a list of patients beeing monitored.',
                          '/check: get most recent information about a patient status given its ID. /check <ID>',
                          '/history: shows a graphical history of a specific sensor, user must provide device ID, metric, time interval. /history <DeviceID> <Metric> <TimeInterval>',
                          '/stopMonitoring: stop monitoring the status of a patient given its name and associated device ID. /stopMonitoring <DeviceID> <Name>',
-                         '/schedule: schedule a medicine reminder, user must provide patient name, medicine name, starting time, period. /schedule <PatientName> <MedicineName> <StartTime> <Period>',
+                         '/schedule: schedule a medicine reminder, user must provide patient name, medicine name, period, starting time. /schedule <PatientName> <MedicineName> <Period> <StartTime>',
                          '/unschedule: stop receiving scheduled reminders, user must provide patient name, medicine name. /unschedule <PatientName> <MedicineName>'] ##cancel notifications for everyone, not sure if this the expected behavior but it like this for now.
         ## need to better define check
         MessageLoop(self.bot, {'chat': self.on_chat_message, 'event': self.on_event}).run_as_thread()
@@ -91,7 +91,7 @@ class TelegramBot():
                     with open(self.chatsPath, "w") as file:
                         json.dump(self.conf, file, indent = 4)
 
-            self.medsConf.append({'deviceID': deviceID, 'name':'', 'medicines':[]})
+            self.medsConf.append({'deviceID': deviceID, 'medicines':[]})
             with open(self.medsPath, "w") as file:
                 json.dump(self.medsConf, file, indent = 4)
 
@@ -106,7 +106,6 @@ class TelegramBot():
 
         for el in self.medsConf:
             if el['deviceID'] == deviceID:
-                el['name'] = patientName
                 with open(self.medsPath, "w") as file:
                     json.dump(self.medsConf, file, indent = 4)
 
@@ -128,32 +127,46 @@ class TelegramBot():
                         return True
         return False
 
+    def loadReminders(self):
+        reminders = []
+        for patient in self.medsConf:
+            for medicine in patient['medicines']:
+                data = {'event': {'deviceID':patient['deviceID'], 'medicine':medicine['medicineName'], 'period':medicine['period']}}
+                tNow = datetime.now().timestamp() 
+                correctionTime = medicine['period'] + (tNow - medicine['startTime'])//medicine['period']  
+                reminders.append({
+                    'deviceID': data['event']['deviceID'],
+                    'medicineName': data['event']['medicine'],
+                    'event':self.bot.scheduler.event_at(correctionTime, data)
+                    })
+        return reminders
         
     def bookMedicineSchedule(self, data, startTime):
         newMedicine = {
                 "medicineName": data['event']['medicine'],
-                "period": data['event']['time'],
+                "period": data['event']['period'],
                 "startTime": startTime
             }
         self.reminders.append({
-            'patientName': data['event']['patient'],
+            'deviceID': data['event']['deviceID'],
             'medicineName': data['event']['medicine'],
             'event':self.bot.scheduler.event_at(startTime, data)
             })
         for patient in self.medsConf:
-            if patient['name'] == data['event']['patient']:
+            if patient['deviceID'] == data['event']['deviceID']:
                 patient['medicines'].append(newMedicine)
                 with open(self.medsPath, 'w') as file:
                     json.dump(self.medsConf, file, indent=4)
 
-    def cancelMedicineSchedule(self, patientName, medicineName):
+
+    def cancelMedicineSchedule(self, patientID, medicineName):
         for reminder in self.reminders:
-            if reminder['patientName'] == patientName and reminder['medicineName'] == medicineName:
+            if reminder['deviceID'] == patientID and reminder['medicineName'] == medicineName:
                 self.bot.scheduler.cancel(reminder['event'])
                 self.reminders.remove(reminder)
 
         for patient in self.medsConf:
-            if patient['name'] == patientName:
+            if patient['deviceID'] == patientID:
                 for medicine in patient['medicines']:
                     if medicine['medicineName'] == medicineName:
                         patient['medicines'].remove(medicine)
@@ -162,11 +175,9 @@ class TelegramBot():
                         break
         
     def sendReminder(self, data):
-        patientName = data['event']['patient']
-        time = data['event']['time']
-        chatId = data['event']['chatID']
+        period = data['event']['period']
         medicineName = data['event']['medicine']
-        deviceID = self.getID(chatId, patientName)
+        deviceID = data['event']['deviceID']
 
         chats = []
         names = []
@@ -183,8 +194,8 @@ class TelegramBot():
         self.sendReminder(data)
 
         for reminder in self.reminders:
-            if reminder['patientName'] == data['event']['patient'] and reminder['medicineName'] == data['event']['medicine']:
-                reminder['event'] = self.bot.scheduler.event_later(data['event']['time'], data)
+            if reminder['deviceID'] == data['event']['deviceID'] and reminder['medicineName'] == data['event']['medicine']:
+                reminder['event'] = self.bot.scheduler.event_later(data['event']['period'], data)
 
     def on_chat_message(self, msg):
         content_type, chat_type, chatId = telepot.glance(msg)
@@ -331,21 +342,22 @@ class TelegramBot():
             elif command == '/schedule':
                 patientName = text.split()[1]
                 medicineName = text.split()[2]
-                time = int(text.split()[3]) 
+                period = int(text.split()[3]) 
                 startTimeSTR = ' '.join(text.split()[4:])
                 if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to schedule reminders for monitored patients. Please type /monitoring to see patients beeing monitored.')
                 else:
                     deviceID = self.getID(chatId, patientName)
                     startTime = datetime.strptime(startTimeSTR, '%d/%m/%y %H:%M').timestamp()
-                    data = {'event': {'chatID': chatId, 'patient':patientName, 'deviceID':deviceID, 'medicine':medicineName, 'time':time}}
+                    data = {'event': {'deviceID':deviceID, 'medicine':medicineName, 'period':period}}
                     self.bookMedicineSchedule(data, startTime)
-                    self.bot.sendMessage(chatId, text='Reminders scheduled for patient '+str(patientName)+' from '+startTimeSTR+', every '+str(time)+'H.')
+                    self.bot.sendMessage(chatId, text='Reminders scheduled for patient '+str(patientName)+' from '+startTimeSTR+', every '+str(period)+'H.')
 
             elif command == '/unschedule':
                 patientName = text.split()[1]
                 medicineName = text.split()[2]
-                self.cancelMedicineSchedule(patientName, medicineName)
+                patientID = self.getID(chatId, patientName)
+                self.cancelMedicineSchedule(patientID, medicineName)
                 self.bot.sendMessage(chatId, text=str(medicineName)+' medicine reminder of patient '+str(patientName)+' removed.')
             else:
                 self.bot.sendMessage(chatId, text="Inavlid command, type /help to see available commands.")
