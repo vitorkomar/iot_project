@@ -20,6 +20,7 @@ class dataStats(object):
         token = requests.get(self.catalogURL + '/influxToken').json()
         org = requests.get(self.catalogURL + '/influxOrg').json()
         host = requests.get(self.catalogURL + '/influxHost').json()
+        database = requests.get(self.catalogURL + '/influxDatabase').json()
 
         client = InfluxDBClient3(host=host, token=token, org=org)
         command = uri[0]
@@ -34,7 +35,6 @@ class dataStats(object):
                 WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
                 # Execute the query
-                database="test"
                 table = client.query(query=query, database=database, language='sql')
                 mean = table[0][0].as_py()
 
@@ -43,7 +43,6 @@ class dataStats(object):
                 WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
                 # Execute the query
-                database="test"
                 table = client.query(query=query, database=database, language='sql')
                 std = table[0][0].as_py()
 
@@ -57,7 +56,6 @@ class dataStats(object):
                         FROM '""" + str(metric) + """' 
                         WHERE "deviceID" = """ + str(device) + """ORDER BY time DESC
                         LIMIT 1"""
-                database="test"
                 table = client.query(query=query, database=database, language='sql')
                 value = table[0][0].as_py()
                 metricsDict[metric] = value

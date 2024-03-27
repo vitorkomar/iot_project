@@ -22,6 +22,7 @@ class dataPlotter(object):
         token = requests.get(self.catalogURL + '/influxToken').json()
         org = requests.get(self.catalogURL + '/influxOrg').json()
         host = requests.get(self.catalogURL + '/influxHost').json()
+        database = requests.get(self.catalogURL + '/influxDatabase').json()
 
         client = InfluxDBClient3(host=host, token=token, org=org)
         device = int(uri[0])
@@ -34,7 +35,6 @@ class dataPlotter(object):
         WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
         # Execute the query
-        database="test"
         table = client.query(query=query, database=database, language='sql')
 
         # Convert to dataframe

@@ -20,7 +20,7 @@ class DataStorer(mqttSubscriber):
         data = requests.get(self.catalogURL)
         data = data.json()
         self.broker = data['brokerAddress']
-        self.port = 1883 ## hardcoded for now
+        self.port = data['brokerPort']
         mqttSubscriber.__init__(self, str(self.clientId), self.broker, self.port)
         self.topic = data['baseTopic']+'/#'
         self.client.on_message = self.on_message

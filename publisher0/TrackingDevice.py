@@ -30,7 +30,7 @@ class TrackingDevice():
         data = data.json()
         self.broker = data['brokerAddress']
         self.topic = data['baseTopic']+'/'+str(self.deviceID)
-        self.port = 1883 ## hardcoded?
+        self.port = data['brokerPort']
 
     def generateID(self):
         data = requests.get(self.catalogURL+'/devices')
@@ -70,15 +70,15 @@ class TrackingDevice():
         #fs = np.array([6,36,3600,3600,3600,3600]) # sampling frequencies of each sensor
         fs = np.array([1,12,7,8,8,21])
         #sensor instances
-        #tempGenerator = DataGenerator(36.6, 0.05, fs[0], 'temperature', 'celsius') # one sample every 10 min
-        tempGenerator = DataGenerator(39, 0.05, fs[0], 'temperature', 'celsius')
+        tempGenerator = DataGenerator(36.6, 0.05, fs[0], 'temperature', 'celsius') # one sample every 10 min
+        #tempGenerator = DataGenerator(39, 0.05, fs[0], 'temperature', 'celsius')
         accGenerator = DataGenerator(1, 0, fs[1], 'acceleration', 'm/s2') # one sample every ? min
         glucGenerator = DataGenerator(99, 0.85, fs[2], 'glucose', 'mg/dl') # one sample every 60 min
-        #systoleGenerator = DataGenerator(124.6, 1.82, fs[3]) # one sample every 60 min
-        #diastoleGenerator = DataGenerator(77.7, 0.94, fs[4]) # one sample every 60 min
+        systoleGenerator = DataGenerator(124.6, 1.82, fs[3]) # one sample every 60 min
+        diastoleGenerator = DataGenerator(77.7, 0.94, fs[4]) # one sample every 60 min
 
-        systoleGenerator = DataGenerator(170, 1.82, fs[3], 'systole', 'mmHg') # one sample every 60 min
-        diastoleGenerator = DataGenerator(100, 0.94, fs[4], 'diastole', 'mmHg') # one sample every 60 min
+        #systoleGenerator = DataGenerator(170, 1.82, fs[3], 'systole', 'mmHg') # one sample every 60 min
+        #diastoleGenerator = DataGenerator(100, 0.94, fs[4], 'diastole', 'mmHg') # one sample every 60 min
         satGenerator = DataGenerator(97.7, 1.02, fs[5], 'saturation', '%') # one sample every 60 min 
 
         generators = np.array([tempGenerator, accGenerator, glucGenerator, systoleGenerator, diastoleGenerator, satGenerator])
@@ -104,10 +104,8 @@ class TrackingDevice():
                 
             time.sleep(1)
             timeCounter += 1
-            if timeCounter == 3600:
+            if timeCounter == 3600: #avoids possible overflow (loop forever)
                 timeCounter = 0
-            if timeCounter == 145:
-                break
             
         publisher.disconnect()
 
