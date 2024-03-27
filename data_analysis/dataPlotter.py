@@ -4,7 +4,6 @@ import base64
 import matplotlib.pyplot as plt
 import os
 from io import BytesIO
-from analysis_functions import *
 from influxdb_client_3 import InfluxDBClient3, Point
 import matplotlib.dates as mdates
 import requests

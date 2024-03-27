@@ -1,4 +1,4 @@
-from mqtt_client import *
+from mqtt_client import mqttSubscriber
 import numpy as np 
 import json
 import time

@@ -1,4 +1,4 @@
-from DataStorer import *
+from DataStorer import DataStorer
 import json
 import requests
 
