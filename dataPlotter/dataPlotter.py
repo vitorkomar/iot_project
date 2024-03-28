@@ -68,6 +68,8 @@ class dataPlotter(object):
             formatter = '%d-%Hh'
         elif timeframe == 'day':
             formatter = '%H:%M'
+        elif timeframe == 'hour':
+            formatter = '%M'
 
         xformatter = mdates.DateFormatter(formatter)
         plt.gcf().axes[0].xaxis.set_major_formatter(xformatter)
