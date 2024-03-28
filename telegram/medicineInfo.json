@@ -1,5 +1,6 @@
 [
     {
-        "deviceID":0
+        "deviceID":0,
+        "medicines" : []
     }
 ]
