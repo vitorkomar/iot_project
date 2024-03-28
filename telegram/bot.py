@@ -29,11 +29,12 @@ class TelegramBot():
                          '/associate: associate a device to the patient it is monitoring, user must provide device ID and patient name. /associate <DeviceID> <Name>',
                          '/setReminderOptions: choose to receive medicine reminders or not (default is to receive) for a given patient. /setReminderOptions <PatientName> <False>',
                          '/monitoring: get a list of patients beeing monitored.',
-                         '/check: get most recent information about a patient status given its ID. /check <ID>',
-                         '/history: shows a graphical history of a specific sensor, user must provide device ID, metric, time interval. /history <DeviceID> <Metric> <TimeInterval>',
+                         '/check: get most recent information about a patient status given its name. /check <PatientName>',
+                         '/satistics: get mean and standard deviation of a patient information for a given time period. /satistics <PatientName> <TimePeriod>',
+                         '/history: shows a graphical history of a specific sensor, user must provide patient name, metric, time interval. /history <PatientName> <Metric> <TimeInterval>',
                          '/stopMonitoring: stop monitoring the status of a patient given its name and associated device ID. /stopMonitoring <DeviceID> <Name>',
                          '/schedule: schedule a medicine reminder, user must provide patient name, medicine name, period, starting time. /schedule <PatientName> <MedicineName> <Period> <StartTime>',
-                         '/unschedule: stop receiving scheduled reminders, user must provide patient name, medicine name. /unschedule <PatientName> <MedicineName>'] ##cancel notifications for everyone, not sure if this the expected behavior but it like this for now.
+                         '/unschedule: stop receiving scheduled reminders, user must provide patient name, medicine name. /unschedule <PatientName> <MedicineName>']
         ## need to better define check
         MessageLoop(self.bot, {'chat': self.on_chat_message, 'event': self.on_event}).run_as_thread()
 
@@ -104,10 +105,10 @@ class TelegramBot():
                         with open(self.chatsPath, 'w') as file:
                             json.dump(self.conf, file, indent=4)
 
-        for el in self.medsConf:
-            if el['deviceID'] == deviceID:
-                with open(self.medsPath, "w") as file:
-                    json.dump(self.medsConf, file, indent = 4)
+        #for el in self.medsConf:
+        #    if el['deviceID'] == deviceID:
+        #        with open(self.medsPath, "w") as file:
+        #            json.dump(self.medsConf, file, indent = 4)
 
     def setReminderOptions(self, chatID, deviceID, preference):
         for el in self.conf: 
@@ -160,7 +161,6 @@ class TelegramBot():
                 patient['medicines'].append(newMedicine)
                 with open(self.medsPath, 'w') as file:
                     json.dump(self.medsConf, file, indent=4)
-
 
     def cancelMedicineSchedule(self, patientID, medicineName):
         for reminder in self.reminders:
@@ -267,8 +267,9 @@ class TelegramBot():
                     self.bot.sendMessage(chatId, text='No patient is beeing monitored at the moment.')
 
             elif command == '/check':
-                deviceID = text.split()[1]
-                patientName = self.getName(chatId, text.split()[1])
+                patientName = text.split()[1]
+                deviceID = self.getID(chatId, patientName)
+                #patientName = self.getName(chatId, text.split()[1])
                 if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check stauts of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 else:
@@ -284,8 +285,10 @@ class TelegramBot():
                     self.bot.sendMessage(chatId, text=message, parse_mode='MarkdownV2')
             
             elif command == '/statistics':
-                deviceID = text.split()[1]
-                patientName = self.getName(chatId, text.split()[1])
+                patientName = text.split()[1]
+                deviceID = self.getID(chatId, patientName)
+                #eviceID = text.split()[1]
+                #patientName = self.getName(chatId, text.split()[1])
                 if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check stauts of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 elif text.split()[2] not in ['month', 'week', 'day', 'hour']:
@@ -305,18 +308,21 @@ class TelegramBot():
                     message += '```'
                     self.bot.sendMessage(chatId, text=message, parse_mode='MarkdownV2')
                                 
-    
             elif command == '/history':
                 plotterURL = requests.get(self.catalogURL+"/plotterURL").json()
                 
-                if self.isMonitored(chatId, self.getName(chatId, text.split()[1])) == False:
+                patientName = text.split()[1]
+                deviceID = self.getID(chatId, patientName)
+
+                #if self.isMonitored(chatId, self.getName(chatId, text.split()[1])) == False:
+                if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check history of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 elif text.split()[2] not in ['temperature', 'glucose', 'systole', 'diastole',  'saturation']:
                     self.bot.sendMessage(chatId, text='Chosen metric is not avaiable. Available metrics are: temperature, glucose, systole, diastole, saturation. Please choose a valid metric.')
                 elif text.split()[3] not in ['month', 'week', 'day', 'hour']:
                     self.bot.sendMessage(chatId, text='Chosen time interval is not avaiable. Available time intervals are: month, week, day, hour. Please choose a valid time interval.')
                 else:
-                    url = plotterURL+'/'+'/'.join(text.split()[1:])
+                    url = plotterURL+'/'+'/'+str(deviceID).join(text.split()[2:])
                     image = requests.get(url)
                     image = image.content
                     with open('image.jpg', "wb") as f:
