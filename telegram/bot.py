@@ -274,7 +274,8 @@ class TelegramBot():
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check stauts of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 else:
                     statsURL = requests.get(self.catalogURL+"/statsURL").json()
-                    url = statsURL+'/check/'+'/'.join(text.split()[1:])
+                    #url = statsURL+'/check/'+'/'.join(text.split()[1:])
+                    url = statsURL+'/check/'+'/'+str(deviceID)
                     stats = requests.get(url).json()
                     message = '```\n'
                     message += 'Metric | Value \n'
@@ -295,7 +296,7 @@ class TelegramBot():
                     self.bot.sendMessage(chatId, text='Chosen time interval is not avaiable. Available time intervals are: month, week, day, hour. Please choose a valid time interval.')
                 else:
                     statsURL = requests.get(self.catalogURL+"/statsURL").json()
-                    url = statsURL+'/statistics/'+'/'.join(text.split()[1:])
+                    url = statsURL+'/statistics/'+'/'+str(deviceID)+'/'+'/'.join(text.split()[2:])
                     print(url)
                     stats = requests.get(url).json()
                     metrics = ['temperature', 'glucose', 'diastole', 'systole', 'saturation']
@@ -322,7 +323,7 @@ class TelegramBot():
                 elif text.split()[3] not in ['month', 'week', 'day', 'hour']:
                     self.bot.sendMessage(chatId, text='Chosen time interval is not avaiable. Available time intervals are: month, week, day, hour. Please choose a valid time interval.')
                 else:
-                    url = plotterURL+'/'+'/'+str(deviceID).join(text.split()[2:])
+                    url = plotterURL+'/'+str(deviceID)+'/'+'/'.join(text.split()[2:])
                     image = requests.get(url)
                     image = image.content
                     with open('image.jpg', "wb") as f:
