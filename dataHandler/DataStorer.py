@@ -67,15 +67,15 @@ class DataStorer(mqttSubscriber):
         #print("*********************Connected to broker \n\n\n\n\n\n\n\n\ ///////////////////////////////////// \n\n\n\n\n ////////////////////******************")
         self.client.subscribe(self.topic)
 
-    def updateSettings(self):
-        """update local data handler settings and store them in a json file"""
-        conf = json.load(open(os.path.join(os.path.curdir, 'settings.json')))
-        conf['catalogURL'] = self.catalogURL
-        conf['brokerAddress'] = self.broker
-        conf['port'] = self.port
-        conf['topic'] = self.topic
-        with open(os.path.join(os.path.curdir, 'settings.json'), "w") as file:
-            json.dump(conf, file, indent = 4)
+    # def updateSettings(self):
+    #     """update local data handler settings and store them in a json file"""
+    #     conf = json.load(open(os.path.join(os.path.curdir, 'settings.json')))
+    #     conf['catalogURL'] = self.catalogURL
+    #     conf['brokerAddress'] = self.broker
+    #     conf['port'] = self.port
+    #     conf['topic'] = self.topic
+    #     with open(os.path.join(os.path.curdir, 'settings.json'), "w") as file:
+    #         json.dump(conf, file, indent = 4)
 
     def run(self):
         """run the data handler"""
