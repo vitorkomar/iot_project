@@ -1,8 +1,6 @@
 {
     "isNew": false,
     "catalogURL": "http://catalog:8084",
-    "brokerAddress": "mqtt.eclipseprojects.io",
-    "port": 1883,
     "topic": "ElderlyMonitoring/0",
     "id": 0,
     "password": "2KCFPO9E"

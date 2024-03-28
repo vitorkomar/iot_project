@@ -58,8 +58,6 @@ class TrackingDevice():
         conf = json.load(open(os.path.join(os.path.curdir, 'deviceSettings.json')))
         conf['isNew'] = False
         conf['catalogURL'] = self.catalogURL
-        conf['brokerAddress'] = self.broker
-        conf['port'] = self.port
         conf['topic'] = self.topic
         conf['id'] = self.deviceID
         conf['password'] = self.devicePassword
