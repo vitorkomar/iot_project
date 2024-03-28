@@ -8,6 +8,7 @@ from influxdb_client_3 import InfluxDBClient3, Point
 import matplotlib.dates as mdates
 import requests
 import matplotlib
+import pandas as pd
 matplotlib.use('agg')
 
 class dataPlotter(object):

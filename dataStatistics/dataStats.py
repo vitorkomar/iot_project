@@ -22,7 +22,7 @@ class dataStats(object):
         host = requests.get(self.catalogURL + '/influxHost').json()
         database = requests.get(self.catalogURL + '/influxDatabase').json()
 
-        client = InfluxDBClient3(host=host, token=token, org=org)
+        #client = InfluxDBClient3(host=host, token=token, org=org)
         command = uri[0]
         device = int(uri[1])
         metrics = ['temperature', 'glucose', 'diastole', 'systole', 'saturation']
@@ -35,7 +35,13 @@ class dataStats(object):
                 WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
                 # Execute the query
-                table = client.query(query=query, database=database, language='sql')
+                #table = client.query(query=query, database=database, language='sql')
+
+                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                    table = client.query(query=query, language='sql')
+                    client.close()
+    
+
                 mean = table[0][0].as_py()
 
                 query = """SELECT STDDEV("value")
@@ -43,7 +49,13 @@ class dataStats(object):
                 WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
                 # Execute the query
-                table = client.query(query=query, database=database, language='sql')
+                #table = client.query(query=query, database=database, language='sql')
+
+                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                    table = client.query(query=query, language='sql')
+                    client.close()
+    
+
                 std = table[0][0].as_py()
 
                 stastsDict = {"mean": mean, "std": std}
@@ -56,7 +68,13 @@ class dataStats(object):
                         FROM '""" + str(metric) + """' 
                         WHERE "deviceID" = """ + str(device) + """ORDER BY time DESC
                         LIMIT 1"""
-                table = client.query(query=query, database=database, language='sql')
+                #table = client.query(query=query, database=database, language='sql')
+
+                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                    table = client.query(query=query, language='sql')
+                    client.close()
+    
+
                 value = table[0][0].as_py()
                 metricsDict[metric] = value
 

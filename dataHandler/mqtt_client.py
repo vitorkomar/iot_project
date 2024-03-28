@@ -59,6 +59,9 @@ class mqttSubscriber():
     def on_connect(self, PahoMQTT, obj, flags, rc):
         print("Connected to broker " + self.broker)
 
+    def on_disconnect(self, PahoMQTT, obj, flags, rc):
+        print("Disonnected from broker " + self.broker)
+
     def on_connect_fail(self, PahoMQTT, obj):
         print("Connect failed")
 

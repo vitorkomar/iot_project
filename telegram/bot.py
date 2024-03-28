@@ -130,15 +130,18 @@ class TelegramBot():
     def loadReminders(self):
         reminders = []
         for patient in self.medsConf:
-            for medicine in patient['medicines']:
-                data = {'event': {'deviceID':patient['deviceID'], 'medicine':medicine['medicineName'], 'period':medicine['period']}}
-                tNow = datetime.now().timestamp() 
-                correctionTime = medicine['period'] + (tNow - medicine['startTime'])//medicine['period']  
-                reminders.append({
-                    'deviceID': data['event']['deviceID'],
-                    'medicineName': data['event']['medicine'],
-                    'event':self.bot.scheduler.event_at(correctionTime, data)
-                    })
+            try:
+                for medicine in patient['medicines']:
+                    data = {'event': {'deviceID':patient['deviceID'], 'medicine':medicine['medicineName'], 'period':medicine['period']}}
+                    tNow = datetime.now().timestamp() 
+                    correctionTime = medicine['period'] + (tNow - medicine['startTime'])//medicine['period']  
+                    reminders.append({
+                        'deviceID': data['event']['deviceID'],
+                        'medicineName': data['event']['medicine'],
+                        'event':self.bot.scheduler.event_at(correctionTime, data)
+                        })
+            except:
+                pass
         return reminders
         
     def bookMedicineSchedule(self, data, startTime):

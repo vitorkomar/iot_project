@@ -4,7 +4,25 @@ import json
 import time
 import requests
 import os 
-from influxdb_client_3 import InfluxDBClient3, Point
+from influxdb_client_3 import InfluxDBClient3, Point, write_client_options, WriteOptions, InfluxDBError
+
+# Define callbacks for write responses
+def success(self, data: str):
+    print(f"Successfully wrote batch: data: {data}")
+
+def error(self, data: str, exception: InfluxDBError):
+    print(f"Failed writing batch: config: {self}, data: {data}, error: {exception}")
+
+def retry(self, data: str, exception: InfluxDBError):
+    print(f"Failed retry writing batch: config: {self}, data: {data}, error: {exception}")
+
+# Instantiate WriteOptions for batching
+write_options = WriteOptions(max_retries=5)
+wco = write_client_options(success_callback=success,
+                            error_callback=error,
+                            retry_callback=retry,
+                            WriteOptions=write_options)
+
 
 
 class DataStorer(mqttSubscriber): 
@@ -24,6 +42,7 @@ class DataStorer(mqttSubscriber):
         mqttSubscriber.__init__(self, str(self.clientId), self.broker, self.port)
         self.topic = data['baseTopic']+'/#'
         self.client.on_message = self.on_message
+        self.client.on_connect = self.my_on_connect
         self.collected = {'temperature': [],
                           'accelerometer':[],
                           'glucose':[],
@@ -42,7 +61,11 @@ class DataStorer(mqttSubscriber):
         self.influxOrg = requests.get(self.catalogURL + '/influxOrg').json()
         self.influxHost = requests.get(self.catalogURL + '/influxHost').json()
         self.influxDatabase = requests.get(self.catalogURL + '/influxDatabase').json()
-        self.influxClient =  InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg)
+        #self.influxClient =  InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, write_client_options=wco)
+
+    def my_on_connect(self, PahoMQTT, obj, flags, rc):
+        #print("*********************Connected to broker \n\n\n\n\n\n\n\n\ ///////////////////////////////////// \n\n\n\n\n ////////////////////******************")
+        self.client.subscribe(self.topic)
 
     def updateSettings(self):
         """update local data handler settings and store them in a json file"""
@@ -113,6 +136,10 @@ class DataStorer(mqttSubscriber):
                 .field("value", data[key]["v"])
                 .field("pubTime", data[key]["t"])
             )
-            self.influxClient.write(database=self.influxDatabase, record=point)
+            #self.influxClient.write(database=self.influxDatabase, record=point)
+            with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
+                client.write(record=point)
+                client.close()
+
             print('uploaded data')
             
