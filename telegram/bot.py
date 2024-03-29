@@ -30,7 +30,7 @@ class TelegramBot():
                          '/setReminderOptions: choose to receive medicine reminders or not (default is to receive) for a given patient. /setReminderOptions <PatientName> <False>',
                          '/monitoring: get a list of patients beeing monitored.',
                          '/check: get most recent information about a patient status given its name. /check <PatientName>',
-                         '/satistics: get mean and standard deviation of a patient information for a given time period. /satistics <TimePeriod> <PatientName>',
+                         '/statistics: get mean and standard deviation of a patient information for a given time period. /statistics <TimePeriod> <PatientName>',
                          '/history: shows a graphical history of a specific sensor, user must provide patient name, metric, time interval. /history <PatientName> <Metric> <TimeInterval>',
                          '/stopMonitoring: stop monitoring the status of a patient given its name and associated device ID. /stopMonitoring <DeviceID> <Name>',
                          '/schedule: schedule a medicine reminder, user must provide patient name, medicine name, period, starting time. /schedule <PatientName> <MedicineName> <Period> <StartTime>',
@@ -273,7 +273,7 @@ class TelegramBot():
                     self.bot.sendMessage(chatId, text='No patient is beeing monitored at the moment.')
 
             elif command == '/check':
-                if len(text.split()) <= 0:
+                if len(text.split()) <= 1:
                     self.bot.sendMessage(chatId, text="There was an error on the message.\nPlease provide the patient name.\nFor more information type /help.")
                 else:
                     patientName = ' '.join(text.split()[1:])
@@ -296,7 +296,7 @@ class TelegramBot():
                 if len(text.split()) <= 1:
                     self.bot.sendMessage(chatId, text="There was an error on the message.\nPlease provide the device id and the name.\nFor more information type /help.")
                 else:
-                    patientName = ' '.join(text.split()[2:]
+                    patientName = ' '.join(text.split()[2:])
                     deviceID = self.getID(chatId, patientName)
                     if self.isMonitored(chatId, patientName) == False:
                         self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check stauts of monitored patients. Please type /monitoring to see patients beeing monitored.')
@@ -304,8 +304,7 @@ class TelegramBot():
                         self.bot.sendMessage(chatId, text='Chosen time interval is not avaiable. Available time intervals are: month, week, day, hour. Please choose a valid time interval.')
                     else:
                         statsURL = requests.get(self.catalogURL+"/statsURL").json()
-                        url = statsURL+'/statistics/'+'/'+str(deviceID)+'/'+'/'.join(text.split()[1]) #######################################
-                        print(url)
+                        url = statsURL+'/statistics/'+'/'+str(deviceID)+'/'+text.split()[1]
                         stats = requests.get(url).json()
                         metrics = ['temperature', 'glucose', 'diastole', 'systole', 'saturation']
                         message = '```\n'
@@ -323,7 +322,7 @@ class TelegramBot():
                 else:
                     plotterURL = requests.get(self.catalogURL+"/plotterURL").json()
                     
-                    patientName = ' '.join(text.split()[3:]
+                    patientName = ' '.join(text.split()[3:])
                     deviceID = self.getID(chatId, patientName)
 
                     if self.isMonitored(chatId, patientName) == False:
@@ -367,20 +366,16 @@ class TelegramBot():
                 period = int(text.split()[2])
                 startDate = text.split()[3]
                 startHour = text.split()[4]
-                patientName = ' '.join(text.split()[5:]
-                #patientName = text.split()[1]
-                #medicineName = text.split()[2]
-                #period = int(text.split()[3]) 
-                #startTimeSTR = ' '.join(text.split()[4:])
-                startTimeSTR = startDate+'/'+str(DateTime.Now().Year)+' '+startHour
+                patientName = ' '.join(text.split()[5:])
+                startTimeSTR = startDate+'/'+str(datetime.now().year)+' '+startHour+' +0100'
                 if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to schedule reminders for monitored patients. Please type /monitoring to see patients beeing monitored.')
                 else:
                     deviceID = self.getID(chatId, patientName)
-                    startTime = datetime.strptime(startTimeSTR, '%d/%m/%y %H:%M').timestamp()
+                    startTime = datetime.strptime(startTimeSTR, '%d/%m/%Y %H:%M %z').timestamp()
                     data = {'event': {'deviceID':deviceID, 'medicine':medicineName, 'period':period}}
                     self.bookMedicineSchedule(data, startTime)
-                    self.bot.sendMessage(chatId, text='Reminders scheduled for patient '+str(patientName)+' from '+startTimeSTR+', every '+str(period)+'H.')
+                    self.bot.sendMessage(chatId, text='Reminders scheduled for patient '+str(patientName)+' from '+startTimeSTR[:-6]+', every '+str(period)+'H.')
 
             elif command == '/unschedule':
                 if len(text.split()) <= 1:

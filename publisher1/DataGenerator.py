@@ -42,5 +42,5 @@ class AccDataGenerator(DataGenerator):
         super().__init__(average, sigma, samplingFrequency, n, u)
 
     def drawSample(self, timeInstant):
-        self.currSample = 10.0*np.random.binomial(1, 0.5)
+        self.currSample = 10.0*np.random.binomial(1, 0.05)
         return self.currSample

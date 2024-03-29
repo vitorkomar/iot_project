@@ -8,13 +8,16 @@ from influxdb_client_3 import InfluxDBClient3, Point, write_client_options, Writ
 
 # Define callbacks for write responses
 def success(self, data: str):
-    print(f"Successfully wrote batch: data: {data}")
+    #print(f"Successfully wrote batch: data: {data}")
+    pass
 
 def error(self, data: str, exception: InfluxDBError):
-    print(f"Failed writing batch: config: {self}, data: {data}, error: {exception}")
+    #print(f"Failed writing batch: config: {self}, data: {data}, error: {exception}")
+    pass
 
 def retry(self, data: str, exception: InfluxDBError):
-    print(f"Failed retry writing batch: config: {self}, data: {data}, error: {exception}")
+    #print(f"Failed retry writing batch: config: {self}, data: {data}, error: {exception}")
+    pass
 
 # Instantiate WriteOptions for batching
 write_options = WriteOptions(max_retries=5)
@@ -104,7 +107,7 @@ class DataStorer(mqttSubscriber):
                     try:
                         requests.put(self.alert_url, json=package) #sending alert to telegram bot
                         print('Alert sent')
-                        print(package)
+                        #print(package)
                     except:
                         print("Couldn't send alert")
             
@@ -113,7 +116,7 @@ class DataStorer(mqttSubscriber):
                     try:
                         requests.put(self.alert_url, json=package) #sending alert to telegram bot
                         print('Alert sent')
-                        print(package)
+                        #print(package)
                     except:
                         print("Couldn't send alert")
         
@@ -132,5 +135,5 @@ class DataStorer(mqttSubscriber):
                 client.write(record=point)
                 client.close()
 
-            print('uploaded data')
+            #print('uploaded data')
             

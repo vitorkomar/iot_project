@@ -109,19 +109,16 @@ class TrackingDevice():
                 publisher.publish_data(self.topic, data)
                 #print(data)
                 #print('////////////// \n')
-                print("published data")
+                #print("published data")
                 
             time.sleep(1)
             timeCounter += 1
 
             if timeCounter%30==0:
-                print('TROCA TROCA')
                 if healthy:
-                    print('Ficou doente')
                     healthy = False
                     generators = sickGenerators
                 else:
-                    print("BÃO")
                     healthy = True
                     generators = healthyGenerators
 
