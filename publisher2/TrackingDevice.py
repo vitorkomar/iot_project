@@ -69,9 +69,10 @@ class TrackingDevice():
         #fs = np.array([6,36,3600,3600,3600,3600]) # sampling frequencies of each sensor
         #fs = np.array([1,12,7,8,8,21])
         fs = np.array([10, 10, 10, 10, 10, 10])
+        #fs = np.array([10])
         #sensor instances
-        #tempGenerator = DataGenerator(36.6, 0.05, fs[0], 'temperature', 'celsius') # one sample every 10 min
-        tempGenerator = DataGenerator(43, 0.05, fs[0], 'temperature', 'celsius')
+        tempGenerator = DataGenerator(36.6, 0.02, fs[0], 'temperature', 'celsius') # one sample every 10 min
+        #tempGenerator = DataGenerator(43, 0.05, fs[0], 'temperature', 'celsius')
         accGenerator = DataGenerator(1, 0, fs[1], 'acceleration', 'm/s2') # one sample every ? min
         glucGenerator = DataGenerator(99, 0.85, fs[2], 'glucose', 'mg/dl') # one sample every 60 min
         systoleGenerator = DataGenerator(124.6, 1.82, fs[3], 'systole', 'mmHg') # one sample every 60 min
@@ -84,6 +85,7 @@ class TrackingDevice():
         generators = np.array([tempGenerator, accGenerator, glucGenerator, systoleGenerator, diastoleGenerator, satGenerator])
         #generators = np.array([tempGenerator])
         #publisher instance
+        print(str(self.deviceID), self.broker, self.port)
         publisher = mqttPublisher(str(self.deviceID), self.broker, self.port)
         publisher.start()
 
