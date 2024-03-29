@@ -94,28 +94,28 @@ class DataStorer(mqttSubscriber):
             i += 1
 
             
-        if v > self.thresholds[n][1]:
-                print(n)
+            if v > self.thresholds[n][1]:
+                    print(n)
 
-                if n == 'accelerometer':
-                    n = 'fall'
-                package = {'deviceID':device_id, 'metric':n, 'alertType':'above'}
-        
-                try:
-                    requests.put(self.alert_url, json=package) #sending alert to telegram bot
-                    print('Alert sent')
-                    print(package)
-                except:
-                    print("Couldn't send alert")
-        
-        elif v < self.thresholds[n][0]:
-                package = {'deviceID':device_id, 'metric':n, 'alertType':'below'}
-                try:
-                    requests.put(self.alert_url, json=package) #sending alert to telegram bot
-                    print('Alert sent')
-                    print(package)
-                except:
-                    print("Couldn't send alert")
+                    if n == 'acceleration':
+                        n = 'fall'
+                    package = {'deviceID':device_id, 'metric':n, 'alertType':'above'}
+            
+                    try:
+                        requests.put(self.alert_url, json=package) #sending alert to telegram bot
+                        print('Alert sent')
+                        print(package)
+                    except:
+                        print("Couldn't send alert")
+            
+            elif v < self.thresholds[n][0]:
+                    package = {'deviceID':device_id, 'metric':n, 'alertType':'below'}
+                    try:
+                        requests.put(self.alert_url, json=package) #sending alert to telegram bot
+                        print('Alert sent')
+                        print(package)
+                    except:
+                        print("Couldn't send alert")
         
         #uploading the data to influx db
         for key in data:

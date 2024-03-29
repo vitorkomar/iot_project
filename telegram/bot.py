@@ -25,7 +25,7 @@ class TelegramBot():
         self.medsConf = json.load(open(self.medsPath)) 
         self.reminders = self.loadReminders() 
         self.commands = ['/help: show information and brief instructions about available commands.', 
-                         '/connect: connect to a monitoring device, user must provide device ID and password. /connect <DeviceID> <Password>',
+                         '/register: connect to a monitoring device, user must provide device ID and password. /register <DeviceID> <Password>',
                          '/associate: associate a device to the patient it is monitoring, user must provide device ID and patient name. /associate <DeviceID> <Name>',
                          '/setReminderOptions: choose to receive medicine reminders or not (default is to receive) for a given patient. /setReminderOptions <PatientName> <False>',
                          '/monitoring: get a list of patients beeing monitored.',
@@ -87,7 +87,7 @@ class TelegramBot():
         else:            
             for el in self.conf: 
                 if el['chatID'] == chatId:
-                    el['devices'].append({'deviceID': deviceID, 'allowReminders': True})
+                    el['devices'].append({'deviceID': deviceID,'allowReminders': True, 'name': 'NO NAME ASSOCIATED'})
                     with open(self.chatsPath, "w") as file:
                         json.dump(self.conf, file, indent = 4)
 
@@ -104,10 +104,6 @@ class TelegramBot():
                         with open(self.chatsPath, 'w') as file:
                             json.dump(self.conf, file, indent=4)
 
-        #for el in self.medsConf:
-        #    if el['deviceID'] == deviceID:
-        #        with open(self.medsPath, "w") as file:
-        #            json.dump(self.medsConf, file, indent = 4)
 
     def setReminderOptions(self, chatID, deviceID, preference):
         for el in self.conf: 
@@ -220,12 +216,12 @@ class TelegramBot():
             elif command == '/start':
                 self.bot.sendMessage(chatId, text="Hello, thanks for contacting!\nType /help to see available commands.")
 
-            elif command == '/connect':
+            elif command == '/register':
                 deviceID = text.split()[1]
                 password = text.split()[2]
                 if self.verifyPassword(chatId, deviceID, password):
                     self.registerDevice(chatId, deviceID)
-                    self.bot.sendMessage(chatId, text="Succesfully connected to device "+str(deviceID)+".")
+                    self.bot.sendMessage(chatId, text="Succesfully connected to device "+str(deviceID)+".\n Please associate to it the name of the person it is monitoring.")
                 else:
                     self.bot.sendMessage(chatId, text="Incorret credentials.")
 

@@ -1,22 +1,3 @@
 [
-    {
-        "chatID": "5646053712",
-        "devices": [
-            {
-                "deviceID": "0",
-                "allowReminders": true,
-                "name": "lula"
-            }
-        ]
-    },
-    {
-        "chatID": "5745174399",
-        "devices": [
-            {
-                "deviceID": "0",
-                "allowReminders": false,
-                "name": "Joel"
-            }
-        ]
-    }
+
 ]
