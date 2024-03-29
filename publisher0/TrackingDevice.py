@@ -40,11 +40,9 @@ class TrackingDevice():
     def generatePassword(self):
         chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         #return ''.join(random.sample(chars,len(chars)))[:8]
-        return '123' #to test it easily the password will be 123
+        return '123'
 
     def updateCatalog(self):
-        #postData = {}
-        #postData[self.deviceID] = {"deviceID":self.deviceID, "topic": self.topic, "password": self.devicePassword}
         data = requests.get(self.catalogURL)
         data = data.json()
         needsUpdate = True
@@ -66,29 +64,26 @@ class TrackingDevice():
             json.dump(conf, file, indent = 4)
             
     def run(self): 
-        #fs = np.array([6,36,3600,3600,3600,3600]) # sampling frequencies of each sensor
-        #fs = np.array([1,12,7,8,8,21])
-        fs = np.array([10, 10, 10, 10, 10, 10])
-        #sensor instances
-        #tempGenerator = DataGenerator(36.6, 0.05, fs[0], 'temperature', 'celsius') # one sample every 10 min
-        tempGenerator = DataGenerator(43, 0.05, fs[0], 'temperature', 'celsius')
-        accGenerator = DataGenerator(1, 0, fs[1], 'acceleration', 'm/s2') # one sample every ? min
-        glucGenerator = DataGenerator(99, 0.85, fs[2], 'glucose', 'mg/dl') # one sample every 60 min
-        systoleGenerator = DataGenerator(124.6, 1.82, fs[3], 'systole', 'mmHg') # one sample every 60 min
-        diastoleGenerator = DataGenerator(77.7, 0.94, fs[4], 'diastole', 'mmHg') # one sample every 60 min
+        fs = np.array([5, 1, 10, 10, 10, 10])
 
-        #systoleGenerator = DataGenerator(170, 1.82, fs[3], 'systole', 'mmHg') # one sample every 60 min
-        #diastoleGenerator = DataGenerator(100, 0.94, fs[4], 'diastole', 'mmHg') # one sample every 60 min
-        satGenerator = DataGenerator(97.7, 1.02, fs[5], 'saturation', '%') # one sample every 60 min 
+        tempGenerator = DataGenerator(36.6, 0.16, fs[0], 'temperature', 'celsius') # one sample every 10 min
+        accGenerator = AccDataGenerator(0, 0, fs[1], 'acceleration', 'm/s2') # one sample every ? min
+        glucGenerator = DataGenerator(80, 2, fs[2], 'glucose', 'mg/dl') # one sample every 60 min
+        systoleGenerator = DataGenerator(124.6, 1, fs[3], 'systole', 'mmHg') # one sample every 60 min
+        diastoleGenerator = DataGenerator(77.7, 1, fs[4], 'diastole', 'mmHg') # one sample every 60 min
+        satGenerator = DataGenerator(97, 1.42, fs[5], 'saturation', '%') # one sample every 60 min 
 
-        generators = np.array([tempGenerator, accGenerator, glucGenerator, systoleGenerator, diastoleGenerator, satGenerator])
-        #generators = np.array([tempGenerator])
-        #publisher instance
+        healthyGenerators = np.array([tempGenerator, accGenerator, glucGenerator, systoleGenerator, diastoleGenerator, satGenerator])
+
+        
+        print(str(self.deviceID), self.broker, self.port)
         publisher = mqttPublisher(str(self.deviceID), self.broker, self.port)
         publisher.start()
 
         timeCounter = 0
         
+        generators = healthyGenerators
+        healthy = True
         while True:
             if (timeCounter%fs==0).any():
                 data = { "bn": "urn:dev:ow:10e2073a01080063", "e":[]}
@@ -100,12 +95,10 @@ class TrackingDevice():
                             "t": strftime('%Y-%m-%d %H:%M:%S', localtime(time.time()))
                         })
                 publisher.publish_data(self.topic, data)
-                #print(data)
-                #print('////////////// \n')
-                print("published data")
                 
             time.sleep(1)
             timeCounter += 1
+
             if timeCounter == 3600: #avoids possible overflow (loop forever)
                 timeCounter = 0
             

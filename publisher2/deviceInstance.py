@@ -1,4 +1,5 @@
-from TrackingDevice import *
+from TrackingDevice import TrackingDevice
+import json
 import time
 
 """Basically run an instance of the wearable (sensors on the elderly monitor device)

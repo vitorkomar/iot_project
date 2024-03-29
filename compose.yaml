@@ -16,14 +16,28 @@ services:
     build: ./dataHandler
     depends_on:
       - catalog
-      - publisher0
+      - publisher1
 
   publisher0:
     build: ./publisher0
     depends_on:
       - catalog
 
-  
+  publisher1:
+    build: ./publisher1
+    depends_on:
+      - catalog
+
+  publisher2:
+    build: ./publisher2
+    depends_on:
+      - catalog
+    
+  publisher3:
+    build: ./publisher3
+    depends_on:
+      - catalog
+
   telegrambot:
     build: ./telegram
     depends_on:

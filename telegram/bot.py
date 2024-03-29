@@ -87,7 +87,7 @@ class TelegramBot():
         else:            
             for el in self.conf: 
                 if el['chatID'] == chatId:
-                    el['devices'].append({'deviceID': deviceID,'allowReminders': True, 'name': 'NO NAME ASSOCIATED'})
+                    el['devices'].append({'deviceID': deviceID,'allowReminders': True, 'name': 'device: ' +str(deviceID)+' (NO NAME ASSOCIATED)'})
                     with open(self.chatsPath, "w") as file:
                         json.dump(self.conf, file, indent = 4)
 

@@ -35,3 +35,12 @@ class DataGenerator():
             #self.currSample = self.avg + self.sigma*np.random.randn()
         self.currSample = self.avg + self.sigma*np.random.randn()
         return self.currSample
+
+class AccDataGenerator(DataGenerator):
+
+    def __init__(self, average, sigma, samplingFrequency, n, u):
+        super().__init__(average, sigma, samplingFrequency, n, u)
+
+    def drawSample(self, timeInstant):
+        self.currSample = 10.0*np.random.binomial(1, 0.05)
+        return self.currSample

@@ -1,4 +1,5 @@
-from TrackingDevice import *
+from TrackingDevice import TrackingDevice
+import json
 
 """Basically run an instance of the wearable (sensors on the elderly monitor device)
     there shall be one instance for each patient

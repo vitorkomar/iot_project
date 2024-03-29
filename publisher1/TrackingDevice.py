@@ -43,8 +43,6 @@ class TrackingDevice():
         return '123'
 
     def updateCatalog(self):
-        #postData = {}
-        #postData[self.deviceID] = {"deviceID":self.deviceID, "topic": self.topic, "password": self.devicePassword}
         data = requests.get(self.catalogURL)
         data = data.json()
         needsUpdate = True
@@ -66,7 +64,7 @@ class TrackingDevice():
             json.dump(conf, file, indent = 4)
             
     def run(self): 
-        fs = np.array([1, 1, 1, 10, 10, 10])
+        fs = np.array([5, 1, 10, 10, 10, 10])
 
         tempGenerator = DataGenerator(36.6, 0.16, fs[0], 'temperature', 'celsius') # one sample every 10 min
         accGenerator = AccDataGenerator(0, 0, fs[1], 'acceleration', 'm/s2') # one sample every ? min
@@ -78,9 +76,9 @@ class TrackingDevice():
         healthyGenerators = np.array([tempGenerator, accGenerator, glucGenerator, systoleGenerator, diastoleGenerator, satGenerator])
 
 
-        tempGenerator2 = DataGenerator(36.5, 0.16, fs[0], 'temperature', 'celsius') # one sample every 10 min
+        tempGenerator2 = DataGenerator(37.7, 0.16, fs[0], 'temperature', 'celsius') # one sample every 10 min
         accGenerator2 = AccDataGenerator(0, 0, fs[1], 'acceleration', 'm/s2') # one sample every ? min
-        glucGenerator2 = DataGenerator(80, 1, fs[2], 'glucose', 'mg/dl') # one sample every 60 min
+        glucGenerator2 = DataGenerator(250, 1, fs[2], 'glucose', 'mg/dl') # one sample every 60 min
         systoleGenerator2 = DataGenerator(124.6, 1, fs[3], 'systole', 'mmHg') # one sample every 60 min
         diastoleGenerator2 = DataGenerator(77.7, 1, fs[4], 'diastole', 'mmHg') # one sample every 60 min
         satGenerator2 = DataGenerator(97, 1.42, fs[5], 'saturation', '%') # one sample every 60 min
@@ -107,9 +105,6 @@ class TrackingDevice():
                             "t": strftime('%Y-%m-%d %H:%M:%S', localtime(time.time()))
                         })
                 publisher.publish_data(self.topic, data)
-                #print(data)
-                #print('////////////// \n')
-                #print("published data")
                 
             time.sleep(1)
             timeCounter += 1
