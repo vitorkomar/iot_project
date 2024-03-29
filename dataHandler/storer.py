@@ -9,6 +9,5 @@ import requests
 catalogURL = json.load(open("settings.json"))["catalogURL"]
 
 storer = DataStorer(catalogURL, 10)
-# storer.updateSettings()
 storer.run()
 

@@ -2,11 +2,8 @@ import json
 import cherrypy
 import base64
 import os
-from io import BytesIO
 from influxdb_client_3 import InfluxDBClient3, Point
 import requests
-import matplotlib
-matplotlib.use('agg')
 
 class dataStats(object):
     '''class for the server that will provide plots for the telegram bot'''
@@ -22,40 +19,38 @@ class dataStats(object):
         host = requests.get(self.catalogURL + '/influxHost').json()
         database = requests.get(self.catalogURL + '/influxDatabase').json()
 
-        #client = InfluxDBClient3(host=host, token=token, org=org)
         command = uri[0]
         device = int(uri[1])
+
         metrics = ['temperature', 'glucose', 'diastole', 'systole', 'saturation']
-        metricsDict = {}
+        metricsDict = {} #will associate each metric to its mean and std
+        
         if command == 'statistics':
+            #if the user requested the statistics, this will re
             timeframe = uri[2]
             for metric in metrics:
+
+                #this query is used to get the mean value
                 query = """SELECT MEAN("value")
                 FROM '""" + str(metric) + """' 
                 WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
-                # Execute the query
-                #table = client.query(query=query, database=database, language='sql')
-
                 with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
                     table = client.query(query=query, language='sql')
                     client.close()
     
-
                 mean = table[0][0].as_py()
 
+                #this query is used to get the standard deviation of the value
                 query = """SELECT STDDEV("value")
                 FROM '""" + str(metric) + """' 
                 WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
-                # Execute the query
-                #table = client.query(query=query, database=database, language='sql')
 
                 with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
                     table = client.query(query=query, language='sql')
                     client.close()
     
-
                 std = table[0][0].as_py()
 
                 stastsDict = {"mean": mean, "std": std}
@@ -64,11 +59,11 @@ class dataStats(object):
         
         elif command == 'check':
             for metric in metrics:
+                #this query is used to get the last recorded value
                 query = """SELECT  "value"
                         FROM '""" + str(metric) + """' 
                         WHERE "deviceID" = """ + str(device) + """ORDER BY time DESC
                         LIMIT 1"""
-                #table = client.query(query=query, database=database, language='sql')
 
                 with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
                     table = client.query(query=query, language='sql')

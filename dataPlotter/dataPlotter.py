@@ -37,9 +37,9 @@ class dataPlotter(object):
 
         # Execute the query
         table = client.query(query=query, database=database, language='sql')
+        client.close()
 
         # Convert to dataframe
-        #df['pubTime'] = pd.to_datetime(df['pubTime'], format='%Y-%m-%d %H:%M:%S')
         df = table.to_pandas().sort_values(by="pubTime")
         df['pubTime'] = pd.to_datetime(df['pubTime'], format='%Y-%m-%d %H:%M:%S')
         unitDict = {
@@ -50,7 +50,6 @@ class dataPlotter(object):
             'saturation': '%',
             'acceleration': 'm/s2'
         }
-
 
 
         fig = plt.figure()

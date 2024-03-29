@@ -61,21 +61,12 @@ class DataStorer(mqttSubscriber):
         self.influxOrg = requests.get(self.catalogURL + '/influxOrg').json()
         self.influxHost = requests.get(self.catalogURL + '/influxHost').json()
         self.influxDatabase = requests.get(self.catalogURL + '/influxDatabase').json()
-        #self.influxClient =  InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, write_client_options=wco)
 
     def my_on_connect(self, PahoMQTT, obj, flags, rc):
-        #print("*********************Connected to broker \n\n\n\n\n\n\n\n\ ///////////////////////////////////// \n\n\n\n\n ////////////////////******************")
+        '''The on_connect is redefined here for this mqtt client because if for some reason
+        it disconnected from the broker it would not be suscribed to the topic
+        This occured in testing when someone used the check, statistics or history commands of the bot'''
         self.client.subscribe(self.topic)
-
-    # def updateSettings(self):
-    #     """update local data handler settings and store them in a json file"""
-    #     conf = json.load(open(os.path.join(os.path.curdir, 'settings.json')))
-    #     conf['catalogURL'] = self.catalogURL
-    #     conf['brokerAddress'] = self.broker
-    #     conf['port'] = self.port
-    #     conf['topic'] = self.topic
-    #     with open(os.path.join(os.path.curdir, 'settings.json'), "w") as file:
-    #         json.dump(conf, file, indent = 4)
 
     def run(self):
         """run the data handler"""

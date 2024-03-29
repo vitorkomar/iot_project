@@ -12,7 +12,7 @@ import os
 """Telegram bot that will allow interaction with wearable device 
     my opnion is that to understand the bot is better to run it and use it alongside with reading the code
     VERY IMPORTANT: DO NOT BLOCK THE BOT!!!!!
-    it will break everything, still need to find a way to fix this behaviour"""
+    it will break everything, apparently this is a problem with the library"""
 
 class TelegramBot():
 
@@ -35,7 +35,6 @@ class TelegramBot():
                          '/stopMonitoring: stop monitoring the status of a patient given its name and associated device ID. /stopMonitoring <DeviceID> <Name>',
                          '/schedule: schedule a medicine reminder, user must provide patient name, medicine name, period, starting time. /schedule <PatientName> <MedicineName> <Period> <StartTime>',
                          '/unschedule: stop receiving scheduled reminders, user must provide patient name, medicine name. /unschedule <PatientName> <MedicineName>']
-        ## need to better define check
         MessageLoop(self.bot, {'chat': self.on_chat_message, 'event': self.on_event}).run_as_thread()
 
     def checkNewChatID(self, chatId):
@@ -212,6 +211,7 @@ class TelegramBot():
                 json.dump(self.conf, file, indent = 4)
             self.bot.sendMessage(chatId, text="Hello, thanks for contacting!\nType /help to see available commands.")
         else:
+            #for each of the possible commands a different branch is run
             if command == '/help': 
                 self.bot.sendMessage(chatId, text='Available commands:')
                 for command in self.commands:
@@ -269,12 +269,10 @@ class TelegramBot():
             elif command == '/check':
                 patientName = text.split()[1]
                 deviceID = self.getID(chatId, patientName)
-                #patientName = self.getName(chatId, text.split()[1])
                 if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check stauts of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 else:
                     statsURL = requests.get(self.catalogURL+"/statsURL").json()
-                    #url = statsURL+'/check/'+'/'.join(text.split()[1:])
                     url = statsURL+'/check/'+'/'+str(deviceID)
                     stats = requests.get(url).json()
                     message = '```\n'
@@ -288,8 +286,6 @@ class TelegramBot():
             elif command == '/statistics':
                 patientName = text.split()[1]
                 deviceID = self.getID(chatId, patientName)
-                #eviceID = text.split()[1]
-                #patientName = self.getName(chatId, text.split()[1])
                 if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check stauts of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 elif text.split()[2] not in ['month', 'week', 'day', 'hour']:
@@ -315,7 +311,6 @@ class TelegramBot():
                 patientName = text.split()[1]
                 deviceID = self.getID(chatId, patientName)
 
-                #if self.isMonitored(chatId, self.getName(chatId, text.split()[1])) == False:
                 if self.isMonitored(chatId, patientName) == False:
                     self.bot.sendMessage(chatId, text='Patient is not being monitored. It is only possible to check history of monitored patients. Please type /monitoring to see patients beeing monitored.')
                 elif text.split()[2] not in ['temperature', 'glucose', 'systole', 'diastole',  'saturation']:

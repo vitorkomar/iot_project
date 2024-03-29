@@ -47,7 +47,6 @@ class mqttSubscriber():
         self.client.disconnect()
 
     def subscribe(self, topic):
-        #self.client.connect(self.broker, self.port)
         self.topic = topic
         self.client.subscribe(self.topic, 2)
 
@@ -70,5 +69,4 @@ class mqttSubscriber():
         pass #behavior will be defined by each use
 
     def on_subscribe(self, PahoMQTT, obj, mid, granted_qos):
-        #print("Subscribed: "+str(mid)+" "+str(granted_qos))
         print("subscribed to " + self.topic)
