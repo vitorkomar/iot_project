@@ -29,7 +29,7 @@ class TrackingDevice():
         data = requests.get(self.catalogURL)
         data = data.json()
         self.broker = data['brokerAddress']
-        self.topic = data['baseTopic']+'/'+str(self.deviceID)
+        self.topic = data['baseTopic']+'/'+str(self.deviceID) + '/measurement'
         self.port = data['brokerPort']
 
     def generateID(self):

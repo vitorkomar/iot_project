@@ -18,7 +18,7 @@ class DataAlerter(mqttClient):
         self.port = data['brokerPort']
         mqttClient.__init__(self, str(self.clientId), self.broker, self.port)
         self.baseTopic = data['baseTopic']
-        self.subTopic = data['baseTopic']+'/#/measurement'
+        self.subTopic = data['baseTopic']+'/+/measurement'
         self.client.on_message = self.on_message
         self.client.on_connect = self.my_on_connect
         self.collected = {'temperature': [],
