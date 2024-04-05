@@ -62,6 +62,12 @@ class TrackingDevice():
         conf['password'] = self.devicePassword
         with open(os.path.join(os.path.curdir, 'deviceSettings.json'), "w") as file:
             json.dump(conf, file, indent = 4)
+
+        ### change to POST ## 1 TODO
+            # #self.medsConf.append({'deviceID': deviceID, 'medicines':[]})
+            # with open(self.medsPath, "w") as file:
+            #     json.dump(self.medsConf, file, indent = 4)
+
             
     def run(self): 
         fs = np.array([5, 1, 10, 10, 10, 10])
