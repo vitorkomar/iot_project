@@ -31,47 +31,47 @@ class dataStats(object):
             for metric in metrics:
 
                 #this query is used to get the mean value
-                query = """SELECT MEAN("value")
-                FROM '""" + str(metric) + """' 
-                WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
+                # query = """SELECT MEAN("value")
+                # FROM '""" + str(metric) + """' 
+                # WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
-                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
-                    table = client.query(query=query, language='sql')
-                    client.close()
+                # with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                #     table = client.query(query=query, language='sql')
+                #     client.close()
     
-                mean = table[0][0].as_py()
+                # mean = table[0][0].as_py()
 
-                #this query is used to get the standard deviation of the value
-                query = """SELECT STDDEV("value")
-                FROM '""" + str(metric) + """' 
-                WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
+                # #this query is used to get the standard deviation of the value
+                # query = """SELECT STDDEV("value")
+                # FROM '""" + str(metric) + """' 
+                # WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
 
-                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
-                    table = client.query(query=query, language='sql')
-                    client.close()
+                # with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                #     table = client.query(query=query, language='sql')
+                #     client.close()
     
-                std = table[0][0].as_py()
+                # std = table[0][0].as_py()
 
-                stastsDict = {"mean": mean, "std": std}
+                stastsDict = {"mean": 42, "std": 4.2}
                 metricsDict[metric] = stastsDict
 
         
         elif command == 'check':
             for metric in metrics:
                 #this query is used to get the last recorded value
-                query = """SELECT  "value"
-                        FROM '""" + str(metric) + """' 
-                        WHERE "deviceID" = """ + str(device) + """ORDER BY time DESC
-                        LIMIT 1"""
+                # query = """SELECT  "value"
+                #         FROM '""" + str(metric) + """' 
+                #         WHERE "deviceID" = """ + str(device) + """ORDER BY time DESC
+                #         LIMIT 1"""
 
-                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
-                    table = client.query(query=query, language='sql')
-                    client.close()
+                # with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                #     table = client.query(query=query, language='sql')
+                #     client.close()
     
 
-                value = table[0][0].as_py()
-                metricsDict[metric] = value
+                # value = table[0][0].as_py()
+                metricsDict[metric] = 42
 
         return json.dumps(metricsDict)
 

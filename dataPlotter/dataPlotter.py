@@ -9,6 +9,7 @@ import matplotlib.dates as mdates
 import requests
 import matplotlib
 import pandas as pd
+import numpy as np ###added to make sample plots must remove later
 matplotlib.use('agg')
 
 class dataPlotter(object):
@@ -31,51 +32,66 @@ class dataPlotter(object):
         timeframe = uri[2]
 
 
-        query = """SELECT *
-        FROM '""" + str(metric) + """' 
-        WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
+        # query = """SELECT *
+        # FROM '""" + str(metric) + """' 
+        # WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
-        # Execute the query
-        table = client.query(query=query, database=database, language='sql')
-        client.close()
+        # # Execute the query
+        # table = client.query(query=query, database=database, language='sql')
+        # client.close()
 
-        # Convert to dataframe
-        df = table.to_pandas().sort_values(by="pubTime")
-        df['pubTime'] = pd.to_datetime(df['pubTime'], format='%Y-%m-%d %H:%M:%S')
-        unitDict = {
-            'temperature': '°C',
-            'glucose': 'mg/dl',
-            'diastole': 'mmHg',
-            'systole': 'mmHg', 
-            'saturation': '%',
-            'acceleration': 'm/s2'
-        }
+        # # Convert to dataframe
+        # df = table.to_pandas().sort_values(by="pubTime")
+        # df['pubTime'] = pd.to_datetime(df['pubTime'], format='%Y-%m-%d %H:%M:%S')
+        # unitDict = {
+        #     'temperature': '°C',
+        #     'glucose': 'mg/dl',
+        #     'diastole': 'mmHg',
+        #     'systole': 'mmHg', 
+        #     'saturation': '%',
+        #     'acceleration': 'm/s2'
+        # }
 
 
+        # fig = plt.figure()
+        # plt.plot(df['pubTime'], df['value'])
+        # plt.title('Last '+ timeframe+' '+metric+' measurements')
+        # plt.xlabel('time')
+
+        # plt.ylabel(unitDict[metric])
+        # plt.grid()
+
+
+        # if timeframe == 'month':
+        #     formatter = '%d/%m'
+        # elif timeframe == 'week':
+        #     formatter = '%d-%Hh'
+        # elif timeframe == 'day':
+        #     formatter = '%H:%M'
+        # elif timeframe == 'hour':
+        #     formatter = '%M'
+
+        # xformatter = mdates.DateFormatter(formatter)
+        # plt.gcf().axes[0].xaxis.set_major_formatter(xformatter)
+        # plt.xticks(df['pubTime'], rotation=45)
+        # plt.locator_params(axis='x', nbins=10)
+        # plt.tight_layout()
+
+        # img_buf = BytesIO()
+        # plt.savefig(img_buf, format='png')
+        # img_buf.seek(0)
+        # plt.close()
+
+        mean = 0; std = 1; variance = np.square(std)
+        x = np.arange(-5,5,.01)
+        f = np.exp(-np.square(x-mean)/2*variance)/(np.sqrt(2*np.pi*variance))
         fig = plt.figure()
-        plt.plot(df['pubTime'], df['value'])
+        plt.plot(x,f)
         plt.title('Last '+ timeframe+' '+metric+' measurements')
         plt.xlabel('time')
-
-        plt.ylabel(unitDict[metric])
-        plt.grid()
-
-
-        if timeframe == 'month':
-            formatter = '%d/%m'
-        elif timeframe == 'week':
-            formatter = '%d-%Hh'
-        elif timeframe == 'day':
-            formatter = '%H:%M'
-        elif timeframe == 'hour':
-            formatter = '%M'
-
-        xformatter = mdates.DateFormatter(formatter)
-        plt.gcf().axes[0].xaxis.set_major_formatter(xformatter)
-        plt.xticks(df['pubTime'], rotation=45)
-        plt.locator_params(axis='x', nbins=10)
         plt.tight_layout()
-
+        plt.grid()
+        
         img_buf = BytesIO()
         plt.savefig(img_buf, format='png')
         img_buf.seek(0)
