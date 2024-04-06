@@ -1,0 +1,74 @@
+{
+    "statsURL": "http://127.0.0.1:8050",
+    "plotterURL": "http://127.0.0.1:1400",
+    "influxToken": "JS6wfmURh1TfcO9oaGFrDtl2lSa7OxDxm5DJ88BG3jhgMy_WtCglNZUlMQ4qd7c8oIcERwDKzaaoviHACnpQmA==",
+    "influxOrg": "Prog4IoT",
+    "influxHost": "https://eu-central-1-1.aws.cloud2.influxdata.com",
+    "influxDatabase": "ElderlyMonitoring",
+    "alert_url": "http://127.0.0.1:1402",
+    "brokerAddress": "mqtt.eclipseprojects.io",
+    "brokerPort": 1883,
+    "baseTopic": "ElderlyMonitoring",
+    "devices": [
+        {
+            "deviceID": "0",
+            "topic": "ElderlyMonitoring/0",
+            "password": "123"
+        }
+    ],
+    "telegramBotChats": [
+        {
+            "chatID": "5745174399",
+            "monitoringDevices": [
+                {
+                    "deviceID": "1",
+                    "allowReminders": true,
+                    "name": "jkl"
+                }
+            ]
+        },
+        {
+            "chatID": "5646053712",
+            "monitoringDevices": [
+                {
+                    "deviceID": "1",
+                    "allowReminders": true,
+                    "name": "lula"
+                }
+            ]
+        }
+    ],
+    "medicineReminders": [],
+    "metrics": [
+        {
+            "metric": "temperature",
+            "normalMax": 37,
+            "normalMin": 35
+        },
+        {
+            "metric": "acceleration",
+            "normalMax": 5,
+            "normalMin": -1
+        },
+        {
+            "metric": "glucose",
+            "normalMax": 100,
+            "normalMin": 70
+        },
+        {
+            "metric": "systole",
+            "normalMax": 140,
+            "normalMin": 90
+        },
+        {
+            "metric": "diastole",
+            "normalMax": 90,
+            "normalMin": 60
+        },
+        {
+            "metric": "saturation",
+            "normalMax": 99,
+            "normalMin": 94
+        }
+    ]
+}
