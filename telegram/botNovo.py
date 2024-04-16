@@ -555,86 +555,6 @@ class TelegramBot():
             self.bot.sendMessage(chatId, text="Hiding options. To open it again simply type something. I am very happy to help.")
             self.mode = "Listening"
    
-    def send_high_temp_alert(self, deviceID):
-        '''method that sends a message to every chat user 
-        that are subscribed to a certatin patient'''
-        for user in self.conf:
-            for device in user['devices']:
-                if device['deviceID'] == deviceID:
-                    self.bot.sendMessage(user['chatID'], "High Temperature Alert: Please check patient "+device['name']+"!")
-
-    def send_low_temp_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "Low Temperature Alert: Please check patient "+device['name']+"!")
-
-    def send_high_glucose_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "High Glucose Alert: Please check patient "+device['name']+"!")
-
-    def send_low_glucose_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "Low Glucose Alert: Please check patient "+device['name']+"!")
-
-    def send_high_pressure_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "High Blood Pressure Alert: Please check patient "+device['name']+"!")
-
-    def send_low_pressure_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "Low Blood Pressure Alert: Please check patient "+device['name']+"!")
-
-    def send_high_systole_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "High Sysolte Alert: Please check patient "+device['name']+"!")
-
-    def send_low_systole_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "Low Systole Alert: Please check patient "+device['name']+"!")
-
-    def send_high_diastole_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "High Diastole Alert: Please check patient "+device['name']+"!")
-
-    def send_low_diastole_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "Low Diastole Alert: Please check patient "+device['name']+"!")
-
-    def send_high_saturation_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "High Saturation Alert: Please check patient "+device['name']+"!")
-
-    def send_low_saturation_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "Low Saturation Alert: Please check patient "+device['name']+"!")
-  
-    def send_fall_alert(self, deviceID):
-        for user in self.conf:
-            for device in user['devices']:
-                if deviceID == device['deviceID']:
-                    self.bot.sendMessage(user['chatID'], "Fall Alert: Please check patient "+device['name']+"!")
-
     def my_on_connect(self, PahoMQTT, obj, flags, rc):
         '''The on_connect is redefined here for this mqtt client because if for some reason
         it disconnected from the broker it would not be suscribed to the topic
@@ -680,15 +600,3 @@ if __name__ == '__main__':
     
     bot = TelegramBot(token, catalogURL)
     bot.run()
-    # conf = {
-    #     '/': {
-    #         'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-    #         'tool.session.on': True
-    #     }
-    # }
-    # webService = Server(bot)
-    # cherrypy.tree.mount(webService, '/', conf)
-    # cherrypy.config.update({'server.socket_host': '0.0.0.0'})
-    # cherrypy.config.update({'server.socket_port': 1402})
-    # cherrypy.engine.start()
-    # cherrypy.engine.block()
