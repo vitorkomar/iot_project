@@ -27,15 +27,15 @@ def updateBotChat(curr_data, uri, new_data):
 
 def removeDevice(curr_data, uri):
 
-    for el in curr_data[uri[0]]:
+    for el in curr_data['devices']:
         if el["deviceID"] == uri[1]:
             curr_data['devices'].remove(el)
-
+    
     for chat in curr_data["telegramBotChats"]:
-        for device in el["monitoringDevices"]:
+        for device in chat["monitoringDevices"]:
             if device["deviceID"] == uri[1]:
-                curr_data["telegramBotChats"]["monitoringDevices"].remove(device)
-
+                chat["monitoringDevices"].remove(device)
+                
     for device in curr_data["medicineReminders"]:
         if device["deviceID"] == uri[1]:
             curr_data["medicineReminders"].remove(device)
@@ -111,7 +111,7 @@ class Catalog(object):
         with open(os.path.join(os.path.curdir, 'catalogSettings.json'),'r+') as file:
             file_data = json.load(file)
     
-        if len(uri) == 1 and uri[0] == "devices":
+        if len(uri) == 2 and uri[0] == "devices":
             try:
                 removeDevice(file_data, uri)
             except:

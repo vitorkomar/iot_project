@@ -25,11 +25,10 @@ class TelegramBot():
         self.broker = data['brokerAddress']
         self.port = data['brokerPort']
         self.botSubscriber = mqttSubscriber("botSubscriber", self.broker, self.port)
-        self.topic = data['baseTopic']+'/+/alert'
-        self.botSubscriber.on_message = self.on_alert
-        self.botSubscriber.on_connect = self.my_on_connect
-        #self.botSubscriber.run(self.topic)
-
+        self.topic = data['baseTopic']+'/+/alert/#'
+        self.botSubscriber.client.on_message = self.on_alert
+        self.botSubscriber.client.on_connect = self.my_on_connect
+    
         self.bot = telepot.Bot(token)
         self.reminders = self.loadReminders() 
         self.mode = "Listening"
@@ -420,7 +419,7 @@ class TelegramBot():
                 deviceID = query_data[1]
                 chosen = " ".join(query_data[2:])
                 statsURL = requests.get(self.catalogURL+"/statsURL").json()
-                url = statsURL+'/check/'+'/'+str(deviceID)
+                url = statsURL+'/check/'+str(deviceID)
                 stats = requests.get(url).json()
                 message = "Patient "+" ".join(query_data[2:])+" status:\n"
                 message += '```\n'
@@ -555,22 +554,7 @@ class TelegramBot():
         elif command == "Hide":
             self.bot.sendMessage(chatId, text="Hiding options. To open it again simply type something. I am very happy to help.")
             self.mode = "Listening"
-
-    
-    def my_on_connect(self, PahoMQTT, obj, flags, rc):
-        '''The on_connect is redefined here for this mqtt client because if for some reason
-        it disconnected from the broker it would not be suscribed to the topic
-        This occured in testing when someone used the check, statistics or history commands of the bot'''
-        self.client.subscribe(self.topic)
-
-    def on_alert(self, PahoMQTT, obj, msg):
-        """ Test function to check messages being received
-            will be called everytime a message is published on the subscribed topic"""
-        message_topic = msg.topic
-        device_id = message_topic.split('/')[1]
-        dataMSG = json.loads(msg.payload)
-        print("message recieved")
-
+   
     def send_high_temp_alert(self, deviceID):
         '''method that sends a message to every chat user 
         that are subscribed to a certatin patient'''
@@ -651,56 +635,43 @@ class TelegramBot():
                 if deviceID == device['deviceID']:
                     self.bot.sendMessage(user['chatID'], "Fall Alert: Please check patient "+device['name']+"!")
 
-class Server(object):
-    exposed = True
-    def __init__(self, bot):
-        self.bot = bot
+    def my_on_connect(self, PahoMQTT, obj, flags, rc):
+        '''The on_connect is redefined here for this mqtt client because if for some reason
+        it disconnected from the broker it would not be suscribed to the topic
+        This occured in testing when someone used the check, statistics or history commands of the bot'''
+        self.botSubscriber.client.subscribe(self.topic)
 
-    def PUT(self, *uri, **params):
-        '''this will receive the alerts and call the correct bot method to send the message'''
+    def on_alert(self, PahoMQTT, obj, msg):
+        """ Test function to check messages being received
+            will be called everytime a message is published on the subscribed topic"""
+        message_topic = msg.topic
+        deviceID = message_topic.split('/')[1]
+        dataMSG = json.loads(msg.payload)
+        print(message_topic)
+        #print("message recieved from "+deviceID)
+        print(dataMSG)
+        chatsLists = requests.get(self.catalogURL + '/telegramBotChats').json() 
+        chats = []
+        names = []
+        for chat in chatsLists:
+            for device in chat['monitoringDevices']:
+                #print(device, deviceID)
+                if device['deviceID'] == deviceID and device['allowReminders'] == True:
+                    chats.append(chat['chatID'])
+                    names.append(device['name'])
+        for chatID, name in zip(chats, names):
+            if 'disconnection' in message_topic:
+                alert = "Disconnection alert: Please check if the device of patient "+name+" is working!"
+            else:
+                alert = dataMSG['metric'].upper()+" alert: Please check patient "+name+"!"
+            self.bot.sendMessage(chatID, text=alert)
+        
+    def run(self):
+        self.botSubscriber.client.connect(self.broker, self.port)
+        #self.subscriber.client.subscribe(self.subTopic)
+        self.botSubscriber.client.loop_forever()
+        #self.botSubscriber.run(self.topic)
 
-        request_data = cherrypy.request.body.read().decode('utf-8')
-        data = json.loads(request_data)
-
-        device = str(data['deviceID'])
-        metric = data['metric']
-        alertType = data['alertType'] #above or below
-        print(metric)
-
-        if metric=='temperature' and alertType=='above':
-            print('alert sent')
-            self.bot.send_high_temp_alert(device)
-        elif metric=='temperature' and alertType=='below':
-            print('alert sent')
-            self.bot.send_low_temp_alert(device)
-        elif metric=='glucose' and alertType=='above':
-            print('alert sent')
-            self.bot.send_high_glucose_alert(device)
-        elif metric=='glucose' and alertType=='below':
-            print('alert sent')
-            self.bot.send_low_glucose_alert(device)
-        elif metric=='systole' and alertType=='above':
-            print('alert sent')
-            self.bot.send_high_systole_alert(device)
-        elif metric=='systole' and alertType=='below':
-            print('alert sent')
-            self.bot.send_low_systole_alert(device)
-        elif metric=='diastole' and alertType=='above':
-            print('alert sent')
-            self.bot.send_high_diastole_alert(device)
-        elif metric=='diastole' and alertType=='below':
-            print('alert sent')
-            self.bot.send_low_diastole_alert(device)
-        elif metric=='saturation' and alertType=='above':
-            print('alert sent')
-            self.bot.send_high_saturation_alert(device)
-        elif metric=='saturation' and alertType=='below':
-            print('alert sent')
-            self.bot.send_low_saturation_alert(device)
-        elif metric=='fall':
-            print('alert sent')
-            self.bot.send_fall_alert(device)
-                  
 if __name__ == '__main__':
 
     settings = json.load(open("settings.json"))
@@ -708,15 +679,16 @@ if __name__ == '__main__':
     catalogURL = settings["catalogURL"]
     
     bot = TelegramBot(token, catalogURL)
-    conf = {
-        '/': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tool.session.on': True
-        }
-    }
-    webService = Server(bot)
-    cherrypy.tree.mount(webService, '/', conf)
-    cherrypy.config.update({'server.socket_host': '0.0.0.0'})
-    cherrypy.config.update({'server.socket_port': 1402})
-    cherrypy.engine.start()
-    cherrypy.engine.block()
+    bot.run()
+    # conf = {
+    #     '/': {
+    #         'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+    #         'tool.session.on': True
+    #     }
+    # }
+    # webService = Server(bot)
+    # cherrypy.tree.mount(webService, '/', conf)
+    # cherrypy.config.update({'server.socket_host': '0.0.0.0'})
+    # cherrypy.config.update({'server.socket_port': 1402})
+    # cherrypy.engine.start()
+    # cherrypy.engine.block()

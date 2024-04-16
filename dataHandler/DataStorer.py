@@ -131,9 +131,9 @@ class DataStorer(mqttSubscriber):
                 .field("pubTime", data[key]["t"])
             )
             #self.influxClient.write(database=self.influxDatabase, record=point)
-            with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
-                client.write(record=point)
-                client.close()
+            # with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
+            #     client.write(record=point)
+            #     client.close()
 
             #print('uploaded data')
             

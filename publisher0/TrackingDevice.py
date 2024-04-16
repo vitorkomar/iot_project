@@ -29,8 +29,10 @@ class TrackingDevice():
         data = requests.get(self.catalogURL)
         data = data.json()
         self.broker = data['brokerAddress']
-        self.topic = data['baseTopic']+'/'+str(self.deviceID)
+        self.topic = data['baseTopic']+'/'+str(self.deviceID)+'/measurement'
         self.port = data['brokerPort']
+        self.disconnectTopic = data['baseTopic']+'/'+str(self.deviceID)+'/alert/disconnection'
+        self.publisher = mqttPublisher(str(self.deviceID), self.broker, self.port)
 
     def generateID(self):
         data = requests.get(self.catalogURL+'/devices')
@@ -47,11 +49,11 @@ class TrackingDevice():
         data = data.json()
         needsUpdate = True
         for device in data['devices']:
-            if self.deviceID == device['deviceID']:
+            if self.deviceID == int(device['deviceID']):
                 needsUpdate = False
         if needsUpdate:
-            postData = {"deviceID":self.deviceID, "topic": self.topic, "password": self.devicePassword}
-            requests.post(self.catalogURL, json=postData)
+            postData = {"deviceID":str(self.deviceID), "topic": self.topic, "password": self.devicePassword}
+            requests.post(self.catalogURL+'/devices', json=postData)
 
     def updateSettings(self):
         conf = json.load(open(os.path.join(os.path.curdir, 'deviceSettings.json')))
@@ -62,11 +64,19 @@ class TrackingDevice():
         conf['password'] = self.devicePassword
         with open(os.path.join(os.path.curdir, 'deviceSettings.json'), "w") as file:
             json.dump(conf, file, indent = 4)
+
+    def removeFromCatalog(self):
+        disconnectAlert = {"alert" : "disconnection"}
+        #publishOnTopic = self.topic+'/'+str(self.deviceID)+'/alert/disconnect'
+        self.publisher.publish_data(self.disconnectTopic, disconnectAlert)
+        self.publisher.stop()
+        uri = '/devices/'+str(self.deviceID)
+        requests.delete(self.catalogURL + uri)
             
     def run(self): 
         fs = np.array([5, 1, 10, 10, 10, 10])
 
-        tempGenerator = DataGenerator(36.6, 0.16, fs[0], 'temperature', 'celsius') # one sample every 10 min
+        tempGenerator = DataGenerator(47, 0.16, fs[0], 'temperature', 'celsius') # one sample every 10 min
         accGenerator = AccDataGenerator(0, 0, fs[1], 'acceleration', 'm/s2') # one sample every ? min
         glucGenerator = DataGenerator(80, 2, fs[2], 'glucose', 'mg/dl') # one sample every 60 min
         systoleGenerator = DataGenerator(124.6, 1, fs[3], 'systole', 'mmHg') # one sample every 60 min
@@ -75,10 +85,9 @@ class TrackingDevice():
 
         healthyGenerators = np.array([tempGenerator, accGenerator, glucGenerator, systoleGenerator, diastoleGenerator, satGenerator])
 
+        #print(str(self.deviceID), self.broker, self.port)
         
-        print(str(self.deviceID), self.broker, self.port)
-        publisher = mqttPublisher(str(self.deviceID), self.broker, self.port)
-        publisher.start()
+        self.publisher.start()
 
         timeCounter = 0
         
@@ -94,15 +103,18 @@ class TrackingDevice():
                             "v": g.drawSample(timeCounter),
                             "t": strftime('%Y-%m-%d %H:%M:%S', localtime(time.time()))
                         })
-                publisher.publish_data(self.topic, data)
-                
+                self.publisher.publish_data(self.topic, data)
+                print("Published " + str(timeCounter) + " "+ self.topic)
             time.sleep(1)
             timeCounter += 1
 
             if timeCounter == 3600: #avoids possible overflow (loop forever)
                 timeCounter = 0
-            
-        publisher.disconnect()
 
+            if timeCounter == 5:
+                break
+            
+        #publisher.disconnect()
+        #self.publisher.stop()
 
     
