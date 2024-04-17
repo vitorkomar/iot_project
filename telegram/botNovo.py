@@ -460,7 +460,10 @@ class TelegramBot():
                 for metric in metrics:
                     mean = stats[metric]['mean']
                     std = stats[metric]['std']
-                    message += metric + f" | {mean:.2f} | {std:.2f} \n"
+                    if mean is None or std is None:
+                        message += metric + f" : No data for this time period    \n"
+                    else:
+                        message += metric + f" | {mean:.2f} | {std:.2f} \n"
                 message += '```'
                 self.bot.sendMessage(chatId, text=message, parse_mode='MarkdownV2')
                 self.message_with_inline_keyboard = self.bot.sendMessage(chatId, 'How can I help you?', reply_markup=self.initial_Keyboard_markup)
@@ -499,11 +502,16 @@ class TelegramBot():
                 plotterURL = requests.get(self.catalogURL+"/plotterURL").json()
                 url = plotterURL+'/'+str(query_data[1])+'/'+str(query_data[-2])+'/'+str(query_data[-1])
                 image = requests.get(url)
-                image = image.content
-                with open('image.jpg', "wb") as f:
-                    f.write(image)
-                self.bot.sendPhoto(chatId, open('image.jpg', 'rb'))
-                os.remove('image.jpg')
+
+                if image.json() == "No data available for this time period":
+                    self.bot.sendMessage(chatId, 'No data available for this time period')
+
+                else:
+                    image = image.content
+                    with open('image.jpg', "wb") as f:
+                        f.write(image)
+                    self.bot.sendPhoto(chatId, open('image.jpg', 'rb'))
+                    os.remove('image.jpg')
                 self.message_with_inline_keyboard = self.bot.sendMessage(chatId, 'How can I help you?', reply_markup=self.initial_Keyboard_markup)
 
         elif command == "StopM":

@@ -1,9 +1,13 @@
 import json
 import cherrypy
-import base64
-import os
-from influxdb_client_3 import InfluxDBClient3, Point
 import requests
+
+def any_value_is_none(dictionary):
+    for value in dictionary.values():
+        if value is None:
+            return True
+    return False
+
 
 class dataStats(object):
     '''class for the server that will provide plots for the telegram bot'''
@@ -13,11 +17,7 @@ class dataStats(object):
         self.catalogURL = catalogURL
 
     def GET(self, *uri):
-
-        token = requests.get(self.catalogURL + '/influxToken').json()
-        org = requests.get(self.catalogURL + '/influxOrg').json()
-        host = requests.get(self.catalogURL + '/influxHost').json()
-        database = requests.get(self.catalogURL + '/influxDatabase').json()
+        connector = requests.get(self.catalogURL + '/connectorURL').json()
 
         command = uri[0]
         device = int(uri[1])
@@ -28,51 +28,17 @@ class dataStats(object):
         if command == 'statistics':
             #if the user requested the statistics, this will re
             timeframe = uri[2]
-            for metric in metrics:
 
-                #this query is used to get the mean value
-                # query = """SELECT MEAN("value")
-                # FROM '""" + str(metric) + """' 
-                # WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
-
-                # with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
-                #     table = client.query(query=query, language='sql')
-                #     client.close()
-    
-                # mean = table[0][0].as_py()
-
-                # #this query is used to get the standard deviation of the value
-                # query = """SELECT STDDEV("value")
-                # FROM '""" + str(metric) + """' 
-                # WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
-
-
-                # with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
-                #     table = client.query(query=query, language='sql')
-                #     client.close()
-    
-                # std = table[0][0].as_py()
-
-                stastsDict = {"mean": 42, "std": 4.2}
-                metricsDict[metric] = stastsDict
+            metricsDict = requests.get(connector+'/'+command+'/'+str(device)+'/'+timeframe).json()
 
         
         elif command == 'check':
-            for metric in metrics:
-                #this query is used to get the last recorded value
-                # query = """SELECT  "value"
-                #         FROM '""" + str(metric) + """' 
-                #         WHERE "deviceID" = """ + str(device) + """ORDER BY time DESC
-                #         LIMIT 1"""
+            metricsDict = requests.get(connector+'/'+command+'/'+str(device)).json()
 
-                # with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
-                #     table = client.query(query=query, language='sql')
-                #     client.close()
-    
+        print(metricsDict)
 
-                # value = table[0][0].as_py()
-                metricsDict[metric] = 42
-
+        if any_value_is_none(metricsDict):
+            return json.dumps("N")
         return json.dumps(metricsDict)
 
 

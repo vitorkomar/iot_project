@@ -1,24 +1,22 @@
 import numpy as np 
 import json
-import time
 import requests
-import os 
-
+from mqtt_client import mqttPublisher, mqttSubscriber
 import cherrypy
 import pandas as pd
 from influxdb_client_3 import InfluxDBClient3, Point, write_client_options, WriteOptions, InfluxDBError
 
 # Define callbacks for write responses
 def success(self, data: str):
-    #print(f"Successfully wrote batch: data: {data}")
+    print(f"Successfully wrote batch: data: {data}")
     pass
 
 def error(self, data: str, exception: InfluxDBError):
-    #print(f"Failed writing batch: config: {self}, data: {data}, error: {exception}")
+    print(f"Failed writing batch: config: {self}, data: {data}, error: {exception}")
     pass
 
 def retry(self, data: str, exception: InfluxDBError):
-    #print(f"Failed retry writing batch: config: {self}, data: {data}, error: {exception}")
+    print(f"Failed retry writing batch: config: {self}, data: {data}, error: {exception}")
     pass
 
 # Instantiate WriteOptions for batching
@@ -27,15 +25,83 @@ wco = write_client_options(success_callback=success,
                             error_callback=error,
                             retry_callback=retry,
                             WriteOptions=write_options)
-or,
+
+                            
 class InfluxConnector(object):
     """provides an interface between microservices and the influxDB database"""
     exposed = True
 
-    def __init__(self, catalogURL):
+
+
+    def __init__(self, catalogURL, clientId):
         self.catalogURL = catalogURL
 
+        self.clientId = clientId
+        data = requests.get(self.catalogURL)
+        data = data.json()
+        self.broker = data['brokerAddress']
+        self.port = data['brokerPort']
+        self.baseTopic = data['baseTopic']
+        self.subTopic = data['baseTopic']+'/+/measurement'
 
+        self.influxToken = requests.get(self.catalogURL + '/influxToken').json()
+        self.influxOrg = requests.get(self.catalogURL + '/influxOrg').json()
+        self.influxHost = requests.get(self.catalogURL + '/influxHost').json()
+        self.influxDatabase = requests.get(self.catalogURL + '/influxDatabase').json()
+
+        self.subscriber = mqttSubscriber("alerterSubscriber", self.broker, self.port)   
+        self.subscriber.client.on_message = self.on_message
+        self.subscriber.client.on_connect = self.my_on_connect
+        self.subscriber.client.connect(self.broker, self.port)
+        self.subscriber.client.loop_start()
+    
+
+    def my_on_connect(self, PahoMQTT, obj, flags, rc):
+        '''The on_connect is redefined here for this mqtt client because if for some reason
+        it disconnected from the broker it would not be suscribed to the topic
+        This occured in testing when someone used the check, statistics or history commands of the bot'''
+        self.subscriber.client.subscribe(self.subTopic)
+
+    def run(self):
+        """run the data handler"""
+        self.subscriber.client.connect(self.broker, self.port)
+        #self.subscriber.client.subscribe(self.subTopic)
+        #self.subscriber.client.loop_forever()
+        self.subscriber.client.loop_forever()
+
+    def on_message(self, PahoMQTT, obj, msg):
+        message_topic = msg.topic
+        device_id = message_topic.split('/')[1] #not sure about the index TODO
+        dataMSG = json.loads(msg.payload)
+        print("Message Received")
+
+        i = 1
+        data = {}
+        for item in dataMSG['e']:
+            n = item['n'] #getting the name of the metric
+            u = item['u'] #getting the unit of the metric
+            v = item['v'] #gettign the value of the metric
+            t = item['t']
+            
+            pointName = 'point' + str(i)
+            data[pointName] = {'n':n, 'u':u, 'v':v, 'deviceID':device_id, 't': t}
+            i += 1
+
+        for key in data:
+            metric = data[key]['n']
+            point = (
+                Point(metric)
+                .tag("deviceID", data[key]["deviceID"])
+                .field("unit", data[key]["u"])
+                .field("value", data[key]["v"])
+                .field("pubTime", data[key]["t"])
+            )
+            #self.influxClient.write(database=self.influxDatabase, record=point)
+            with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
+                client.write(record=point)
+                client.close()
+
+            print('uploaded data')
 
     def GET(self, *uri):
         """GET method for the influx connector, it exposes 3 functionalities
@@ -51,17 +117,13 @@ class InfluxConnector(object):
         the plot command is used following this structure url/plot/deviceID/timeframe/metric
         """
 
-        token = requests.get(self.catalogURL + '/influxToken').json()
-        org = requests.get(self.catalogURL + '/influxOrg').json()
-        host = requests.get(self.catalogURL + '/influxHost').json()
-        database = requests.get(self.catalogURL + '/influxDatabase').json()
-
         metrics = ['temperature', 'glucose', 'diastole', 'systole', 'saturation']
 
         command = uri[0]
         device = int(uri[1])
 
         if command == "check":
+            metricsDict = {}
             for metric in metrics:
                 #this query is used to get the last recorded value
                 query = """SELECT  "value"
@@ -69,7 +131,7 @@ class InfluxConnector(object):
                         WHERE "deviceID" = """ + str(device) + """ORDER BY time DESC
                         LIMIT 1"""
 
-                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
                     table = client.query(query=query, language='sql')
                     client.close()
     
@@ -80,6 +142,7 @@ class InfluxConnector(object):
 
 
         elif command == "statistics":
+            metricsDict = {}
             timeframe = uri[2]
             for metric in metrics:
 
@@ -88,10 +151,11 @@ class InfluxConnector(object):
                 FROM '""" + str(metric) + """' 
                 WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
-                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
                     table = client.query(query=query, language='sql')
                     client.close()
     
+                print(table)
                 mean = table[0][0].as_py()
 
                 #this query is used to get the standard deviation of the value
@@ -100,7 +164,7 @@ class InfluxConnector(object):
                 WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
 
-                with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+                with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
                     table = client.query(query=query, language='sql')
                     client.close()
     
@@ -112,42 +176,19 @@ class InfluxConnector(object):
 
         elif command == "plot":
             timeframe = uri[2]
-            timeframe = uri[3]
+            metric = uri[3]
 
             query = """SELECT *
             FROM '""" + str(metric) + """' 
             WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
 
-            with InfluxDBClient3(host=host, token=token, org=org, database=database) as client:
+            with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
                 table = client.query(query=query, language='sql')
                 client.close()
 
             df = table.to_pandas().sort_values(by="pubTime")
-            df['pubTime'] = pd.to_datetime(df['pubTime'], format='%Y-%m-%d %H:%M:%S')
+            return df.to_json()
 
-            return json.dumps(df.to_json())
-
-
-
-    def POST(self, *uri, **params):
-        """POST method for the influx connector which is used by the handler service to upload
-        data to the influx DB"""
-
-
-
-        #TODO
-        for key in data:
-            metric = data[key]['n']
-            point = (
-                Point(metric)
-                .tag("deviceID", data[key]["deviceID"])
-                .field("unit", data[key]["u"])
-                .field("value", data[key]["v"])
-                .field("pubTime", data[key]["t"])
-            )
-            with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
-                client.write(record=point)
-                client.close()
 
 
 
@@ -158,7 +199,9 @@ if __name__ == '__main__':
             'tool.session.on': True
         }
     }
-    webService = Catalog()
+    catalogURL = json.load(open("settings.json"))["catalogURL"]
+    webService = InfluxConnector(catalogURL, 10)
+    #webService.run()
     cherrypy.tree.mount(webService, '/', conf)
     cherrypy.config.update({'server.socket_host': '0.0.0.0'})
     cherrypy.config.update({'server.socket_port': 3000})
