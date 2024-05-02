@@ -46,7 +46,7 @@ class DataAlerter():
     def run(self):
         """run the data handler"""
         self.subscriber.client.connect(self.broker, self.port)
-        #self.subscriber.client.subscribe(self.subTopic)
+        self.subscriber.client.subscribe(self.subTopic)
         self.subscriber.client.loop_forever()
 
     def on_message(self, PahoMQTT, obj, msg):
@@ -56,6 +56,7 @@ class DataAlerter():
         device_id = message_topic.split('/')[1] #not sure about the index TODO
         dataMSG = json.loads(msg.payload)
         print("Message Received")
+        print(dataMSG)
 
         #publisher = mqttPublisher(str(self.deviceID), self.broker, self.port)
         self.publisher.start()
