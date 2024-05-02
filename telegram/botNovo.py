@@ -502,11 +502,11 @@ class TelegramBot():
                 plotterURL = requests.get(self.catalogURL+"/plotterURL").json()
                 url = plotterURL+'/'+str(query_data[1])+'/'+str(query_data[-2])+'/'+str(query_data[-1])
                 image = requests.get(url)
-
-                if image.json() == "No data available for this time period":
+                print(image)
+                try:
+                    image.json() == "No data available for this time period"
                     self.bot.sendMessage(chatId, 'No data available for this time period')
-
-                else:
+                except:
                     image = image.content
                     with open('image.jpg', "wb") as f:
                         f.write(image)
