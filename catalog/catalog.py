@@ -14,7 +14,7 @@ def addMedicine(curr_data, uri, new_data):
     #uri0 -> medicineReminders; #uri1 -> deviceID; 
     for el in curr_data[uri[0]]:
         if el["deviceID"] == uri[1]:
-            el["medicines"].append(new_data)
+            el["medicine"].append(new_data) #change to string to medicines might be better
 
 def updateBotChat(curr_data, uri, new_data):
 
@@ -74,6 +74,8 @@ class Catalog(object):
             file_data = json.load(file)
        
         if len(uri) == 1 and (uri[0] == "devices" or uri[0] == "telegramBotChats"):
+            if uri[0]=="devices":
+                file_data["medicineReminders"].append({"deviceID": new_data["deviceID"], "medicine": []})
             file_data[uri[0]].append(new_data)
         elif len(uri) == 2 and uri[0] == "telegramBotChats":
             try:
