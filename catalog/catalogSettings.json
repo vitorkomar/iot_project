@@ -9,51 +9,18 @@
     "brokerAddress": "mqtt.eclipseprojects.io",
     "brokerPort": 1883,
     "baseTopic": "ElderlyMonitoring",
-    "devices": [
+    "devices": [],
+    "users": [
         {
-            "deviceID": "0",
-            "topic": "ElderlyMonitoring/0",
-            "password": "123"
+            "userID": "5745174399",
+            "monitoringDevices": []
         },
         {
-            "deviceID": "1",
-            "topic": "ElderlyMonitoring/1/measurement",
-            "password": "123"
-        }
-    ],
-    "telegramBotChats": [
-        {
-            "chatID": "5745174399",
-            "monitoringDevices": [
-                {
-                    "deviceID": "0",
-                    "allowReminders": true,
-                    "name": "Rafa"
-                },
-                {
-                    "deviceID": "1",
-                    "allowReminders": true,
-                    "name": "Lucca"
-                }
-            ]
-        },
-        {
-            "chatID": "5646053712",
+            "userID": "5646053712",
             "monitoringDevices": []
         }
     ],
-    "medicineReminders": [
-        {
-            "deviceID": "1",
-            "medicine": [
-                {
-                    "medicineName": "Ibuprofeno",
-                    "period": 5,
-                    "startTime": 1714651800.0
-                }
-            ]
-        }
-    ],
+    "medicineReminders": [],
     "metrics": [
         {
             "metric": "temperature",

@@ -4,9 +4,9 @@ import os
 
 def addMonitoringDevice(curr_data, uri, new_data):
 
-    #uri0 -> telegramBotChats; #uri1 -> chat; 
+    #uri0 -> users; #uri1 -> chat; 
     for el in curr_data[uri[0]]:
-        if el["chatID"] == uri[1]:
+        if el["userID"] == uri[1]:
             el["monitoringDevices"].append(new_data)
 
 def addMedicine(curr_data, uri, new_data):
@@ -18,7 +18,7 @@ def addMedicine(curr_data, uri, new_data):
 
 def updateBotChat(curr_data, uri, new_data):
 
-    keysList = list(new_data.keys()) #key0 -> chatID; #key1 -> deviceID; #key2 -> newData (name or allowReminders)
+    keysList = list(new_data.keys()) #key0 -> userID; #key1 -> deviceID; #key2 -> newData (name or allowReminders)
     for el in curr_data[uri[0]]:
         if el[keysList[0]] == new_data[keysList[0]]:
             for device in el["monitoringDevices"]: 
@@ -31,7 +31,7 @@ def removeDevice(curr_data, uri):
         if el["deviceID"] == uri[1]:
             curr_data['devices'].remove(el)
     
-    for chat in curr_data["telegramBotChats"]:
+    for chat in curr_data["users"]:
         for device in chat["monitoringDevices"]:
             if device["deviceID"] == uri[1]:
                 chat["monitoringDevices"].remove(device)
@@ -50,8 +50,8 @@ def removeReminder(curr_data, uri):
 
 def removeFromChat(curr_data, uri):
 
-    for chat in curr_data["telegramBotChats"]:
-        if chat["chatID"] == uri[1]:
+    for chat in curr_data["users"]:
+        if chat["userID"] == uri[1]:
             for device in chat["monitoringDevices"]:
                 chat["monitoringDevices"].remove(device)
 
@@ -73,11 +73,11 @@ class Catalog(object):
         with open(os.path.join(os.path.curdir, 'catalogSettings.json'),'r+') as file:
             file_data = json.load(file)
        
-        if len(uri) == 1 and (uri[0] == "devices" or uri[0] == "telegramBotChats"):
+        if len(uri) == 1 and (uri[0] == "devices" or uri[0] == "users"):
             if uri[0]=="devices":
                 file_data["medicineReminders"].append({"deviceID": new_data["deviceID"], "medicine": []})
             file_data[uri[0]].append(new_data)
-        elif len(uri) == 2 and uri[0] == "telegramBotChats":
+        elif len(uri) == 2 and uri[0] == "users":
             try:
                 addMonitoringDevice(file_data, uri, new_data)
             except:
@@ -100,10 +100,10 @@ class Catalog(object):
         with open(os.path.join(os.path.curdir, 'catalogSettings.json'),'r+') as file:
             file_data = json.load(file)
 
-        if len(uri) == 1 and uri[0] == "telegramBotChats":
+        if len(uri) == 1 and uri[0] == "users":
             updateBotChat(file_data, uri, new_data)
         else: 
-            raise cherrypy.HTTPError(404, "Error: It is only possible to update telegramBotChats.")
+            raise cherrypy.HTTPError(404, "Error: It is only possible to update users.")
 
         with open(os.path.join(os.path.curdir, 'catalogSettings.json'), "w") as file:
             json.dump(file_data, file, indent = 4)
@@ -123,7 +123,7 @@ class Catalog(object):
                 removeReminder(file_data, uri)
             except:
                 raise cherrypy.HTTPError(400,"Bad Request. Request must contain valid medicine and device ID.")
-        elif len(uri) == 3 and uri[0] == "telegramBotChats":
+        elif len(uri) == 3 and uri[0] == "users":
             try:
                 removeFromChat(file_data, uri)
             except:
