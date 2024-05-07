@@ -6,15 +6,16 @@ import matplotlib.dates as mdates
 import requests
 import matplotlib
 import pandas as pd
-import numpy as np ###added to make sample plots must remove later
 
 from matplotlib.dates import DateFormatter, DayLocator, HourLocator, MinuteLocator
 matplotlib.use('agg')
 
 class dataPlotter(object):
-    '''class for the server that will provide plots for the telegram bot'''
+    """ Plotter class that is responsible for stablishing an interface between telegram bot and InfluxDB
+        This service receives get requests from the telegram bot and asks (via REST) the influx connector for the 
+            required data in order to provide it for the bot
+    """
     exposed = True
-
     def __init__(self, catalogURL):
         self.catalogURL = catalogURL
 
@@ -41,8 +42,6 @@ class dataPlotter(object):
 
         df = pd.read_json(json.dumps(data))
         df['pubTime'] = pd.to_datetime(df['pubTime'], format='%Y-%m-%d %H:%M:%S')
-
-        print(df)
 
         if df.empty:
             return json.dumps("No data available for this time period")
