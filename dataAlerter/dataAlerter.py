@@ -1,12 +1,18 @@
-from mqtt_clientOld import mqttPublisher, mqttSubscriber
 import numpy as np 
 import json
 import time
 import os
 import requests
 
-#class DataAlerter(mqttClient): 
+from mqtt_client import mqttPublisher, mqttSubscriber
+
 class DataAlerter():
+    """ Alerter class that is responsible to send alert messages to the telegram bot when needed
+        Alert messages can be either disconnection or sick data
+        It cointains one mqtt subscriber and one mqtt publisher:
+             The subscriber is subscribed to ElderlyMonitoring/+/measurement (receives from all devices; + wildcard)
+             The publisher can publish an alert in the topic ElderlyMonitoring/{deviceID}/alert/{sensorName}/{condition}
+    """
     def __init__(self, catalogURL, clientId):
         self.catalogURL = catalogURL
         self.clientId = clientId
@@ -18,7 +24,7 @@ class DataAlerter():
         self.subTopic = data['baseTopic']+'/+/measurement'
 
         self.subscriber = mqttSubscriber("alerterSubscriber", self.broker, self.port)
-        self.subscriber.client.on_message = self.on_message
+        self.subscriber.client.on_message = self.my_on_message
         self.subscriber.client.on_connect = self.my_on_connect
 
         self.publisher = mqttPublisher("alerterPublisher", self.broker, self.port)
@@ -38,27 +44,35 @@ class DataAlerter():
 
 
     def my_on_connect(self, PahoMQTT, obj, flags, rc):
-        '''The on_connect is redefined here for this mqtt client because if for some reason
-        it disconnected from the broker it would not be suscribed to the topic
-        This occured in testing when someone used the check, statistics or history commands of the bot'''
-        self.subscriber.client.subscribe(self.subTopic)
+        """ Customized version of standard mqtt on_connect
+            During development we faced issues with the maintaining connection with the broker
+                everytime we lost connection we were not subscribed anymore
+                to solve this issue we implemented this customized on_connect
+            Every time it connects to the broker it subscribe to correct topic 
+        """
+        print("Connected to broker " + self.broker)
+        self.subscriber.topic = self.subTopic
+        self.subscriber.client.subscribe(self.subTopic, 2)
 
     def run(self):
-        """run the data handler"""
+        """ Runs the data alerter
+        """
         self.subscriber.client.connect(self.broker, self.port)
-        self.subscriber.client.subscribe(self.subTopic)
         self.subscriber.client.loop_forever()
 
-    def on_message(self, PahoMQTT, obj, msg):
-        """ Test function to check messages being received
-            will be called everytime a message is published on the subscribed topic"""
+    def my_on_message(self, PahoMQTT, obj, msg):
+        """ Everytime a message is received from the broker this customized on_message will be executed
+            It checks if the received data is within a threshold and if not sends an alert to the bot 
+            The alert specifies which device ID is out of range, which sensor the out of range data comes from 
+                and if it is above or below the range
+            The alert is sent using an mqtt publisher that publishes
+            Example of topic (fever condition): ElderlyMonitoring/0/alert/temperature/above 
+        """
         message_topic = msg.topic
-        device_id = message_topic.split('/')[1] #not sure about the index TODO
+        device_id = message_topic.split('/')[1] 
         dataMSG = json.loads(msg.payload)
-        print("Message Received")
-        print(dataMSG)
+        print(f"Message received from topic {message_topic}")
 
-        #publisher = mqttPublisher(str(self.deviceID), self.broker, self.port)
         self.publisher.start()
 
         i = 1
@@ -78,15 +92,13 @@ class DataAlerter():
                     if n == 'acceleration':
                         n = 'fall'
                     
-                    #self.publish_data(self.baseTopic+'/'+str(device_id)+'/alert/'+str(n)+'/above')
                     dataAlert = {"alert" : "above", "metric": n}
                     publishOnTopic = self.baseTopic+'/'+str(device_id)+'/alert/'+str(n)+'/above'
                     self.publisher.publish_data(publishOnTopic, dataAlert)
             
             elif v < self.thresholds[n][0]:
-                    #self.publish_data(self.baseTopic+'/'+str(device_id)+'/alert/'+str(n)+'/below')
                     dataAlert = {"alert" : "below", "metric": n}
-                    publishOnTopic = self.baseTopic+'/'+str(device_id)+'/alert/'+str(n)+'/above'
+                    publishOnTopic = self.baseTopic+'/'+str(device_id)+'/alert/'+str(n)+'/below'
                     self.publisher.publish_data(publishOnTopic, dataAlert)
             
 if __name__ == '__main__':
