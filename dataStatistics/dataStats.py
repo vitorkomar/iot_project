@@ -10,9 +10,11 @@ def any_value_is_none(dictionary):
 
 
 class dataStats(object):
-    '''class for the server that will provide plots for the telegram bot'''
+    """ Statistics class that is responsible for stablishing an interface between telegram bot and InfluxDB
+        This service receives get requests from the telegram bot and asks (via REST) the influx connector for the 
+            required data in order to provide it for the bot
+    """
     exposed = True
-
     def __init__(self, catalogURL):
         self.catalogURL = catalogURL
 
@@ -26,7 +28,7 @@ class dataStats(object):
         metricsDict = {} #will associate each metric to its mean and std
         
         if command == 'statistics':
-            #if the user requested the statistics, this will re
+            
             timeframe = uri[2]
 
             metricsDict = requests.get(connector+'/'+command+'/'+str(device)+'/'+timeframe).json()
@@ -35,7 +37,7 @@ class dataStats(object):
         elif command == 'check':
             metricsDict = requests.get(connector+'/'+command+'/'+str(device)).json()
 
-        print(metricsDict)
+        
 
         if any_value_is_none(metricsDict):
             return json.dumps("N")
