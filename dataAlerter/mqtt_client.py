@@ -53,7 +53,7 @@ class mqttSubscriber():
         self.subscribe(topic)
         self.client.loop_forever()
         
-    def on_disconnect(self, PahoMQTT, obj, flags, rc):
+    def on_disconnect(self, PahoMQTT, userdata, rc):
         print("Disonnected from broker " + self.broker)
 
     def on_subscribe(self, PahoMQTT, obj, mid, granted_qos):

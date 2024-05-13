@@ -23,11 +23,11 @@ class DataAlerter():
         self.baseTopic = data['baseTopic']
         self.subTopic = data['baseTopic']+'/+/measurement'
 
-        self.subscriber = mqttSubscriber("alerterSubscriber", self.broker, self.port)
+        self.subscriber = mqttSubscriber("alerterSubscriberEM", self.broker, self.port)
         self.subscriber.client.on_message = self.my_on_message
         self.subscriber.client.on_connect = self.my_on_connect
 
-        self.publisher = mqttPublisher("alerterPublisher", self.broker, self.port)
+        self.publisher = mqttPublisher("alerterPublisherEM", self.broker, self.port)
 
         self.collected = {'temperature': [],
                           'accelerometer':[],

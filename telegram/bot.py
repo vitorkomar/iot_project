@@ -98,6 +98,7 @@ class TelegramBot():
     def getDevicesList(self, userID):
         chatsLists = requests.get(self.catalogURL + '/users').json()
         for el in chatsLists:
+            print(el, userID)
             if el['userID'] == str(userID):
                 devicesList = el['monitoringDevices']
         return devicesList
