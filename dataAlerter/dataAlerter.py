@@ -28,7 +28,7 @@ class DataAlerter():
         self.subscriber.client.on_connect = self.my_on_connect
 
         self.publisher = mqttPublisher("alerterPublisherEM", self.broker, self.port)
-
+        self.publisher.start()
         self.collected = {'temperature': [],
                           'accelerometer':[],
                           'glucose':[],
@@ -73,7 +73,6 @@ class DataAlerter():
         dataMSG = json.loads(msg.payload)
         print(f"Message received from topic {message_topic}")
 
-        self.publisher.start()
 
         i = 1
         data = {}
