@@ -53,7 +53,8 @@ def removeFromChat(curr_data, uri):
     for chat in curr_data["users"]:
         if chat["userID"] == uri[1]:
             for device in chat["monitoringDevices"]:
-                chat["monitoringDevices"].remove(device)
+                if device["deviceID"] == uri[2]:
+                    chat["monitoringDevices"].remove(device)
 
 class Catalog(object):   
     '''Class for the catalog server'''

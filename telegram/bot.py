@@ -98,7 +98,6 @@ class TelegramBot():
     def getDevicesList(self, userID):
         chatsLists = requests.get(self.catalogURL + '/users').json()
         for el in chatsLists:
-            print(el, userID)
             if el['userID'] == str(userID):
                 devicesList = el['monitoringDevices']
         return devicesList
@@ -265,7 +264,7 @@ class TelegramBot():
                 password = text
                 if self.verifyPassword(userID, self.buffer[0], password):
                     self.registerDevice(userID, self.buffer[0])
-                    self.bot.sendMessage(userID, text="Succesfully connected to device "+str(self.buffer[0])+".\n Please associate to it the name of the person it is monitoring.\n What is their name?")
+                    self.bot.sendMessage(userID, text="Succesfully connected to device "+str(self.buffer[0])+".\nPlease associate to it the name of the person it is monitoring.\nWhat is their name?")
                     self.mode = "Register Name"
                 else:
                     self.bot.sendMessage(userID, text="Incorret credentials.")
@@ -503,7 +502,6 @@ class TelegramBot():
                 plotterURL = requests.get(self.catalogURL+"/plotterURL").json()
                 url = plotterURL+'/'+str(query_data[1])+'/'+str(query_data[-2])+'/'+str(query_data[-1])
                 image = requests.get(url)
-                print(image)
                 try:
                     image.json() == "No data available for this time period"
                     self.bot.sendMessage(userID, 'No data available for this time period')
