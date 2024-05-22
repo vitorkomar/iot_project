@@ -174,7 +174,7 @@ class TelegramBot():
         reminders = []
         for patient in medsLists:
             try:
-                for medicine in patient['medicines']:
+                for medicine in patient['medicine']:
                     data = {'event': {'deviceID':patient['deviceID'], 'medicine':medicine['medicineName'], 'period':medicine['period']}}
                     tNow = datetime.now().timestamp() 
                     correctionTime = medicine['period'] + (tNow - medicine['startTime'])//medicine['period']  
