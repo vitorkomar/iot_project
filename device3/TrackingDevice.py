@@ -147,8 +147,6 @@ class TrackingDevice():
                     
             if timeCounter == 3600: #avoids possible overflow (loop forever)
                 timeCounter = 0
-            
-            if timeCounter == 5:
-                break
+
 
     

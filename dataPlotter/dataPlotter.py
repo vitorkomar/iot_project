@@ -58,7 +58,7 @@ class dataPlotter(object):
 
         if timeframe == 'month':
             formatter = '%d/%m'
-            locator = DayLocator()
+            locator = DayLocator(bymonthday=range(0,30,3))
         elif timeframe == 'week':
             formatter = '%d-%Hh'
             locator = DayLocator()
@@ -67,7 +67,7 @@ class dataPlotter(object):
             locator = HourLocator()
         elif timeframe == 'hour':
             formatter = '%H:%M'
-            locator = MinuteLocator()
+            locator = MinuteLocator(byminute=range(0,60,5))
 
         xformatter = mdates.DateFormatter(formatter)
         plt.gcf().axes[0].xaxis.set_major_formatter(xformatter)

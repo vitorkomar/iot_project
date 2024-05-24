@@ -95,23 +95,23 @@ class TrackingDevice():
     def run(self):
         """ Simulates the behavior of all sensors inside the device while also publishing messages
         """
-        fs = np.array([5, 1, 10, 10, 10, 10])
+        fs = np.array([30, 30, 30, 30, 30, 30])
 
         tempGenerator = DataGenerator(36.6, 0.16, fs[0], 'temperature', 'celsius') 
         accGenerator = AccDataGenerator(0, 0, fs[1], 'acceleration', 'm/s2') 
         glucGenerator = DataGenerator(80, 2, fs[2], 'glucose', 'mg/dl') 
         systoleGenerator = DataGenerator(124.6, 1, fs[3], 'systole', 'mmHg') 
         diastoleGenerator = DataGenerator(77.7, 1, fs[4], 'diastole', 'mmHg')
-        satGenerator = DataGenerator(97, 1.42, fs[5], 'saturation', '%')
+        satGenerator = DataGenerator(85, 1.42, fs[5], 'saturation', '%')
 
         healthyGenerators = np.array([tempGenerator, accGenerator, glucGenerator, systoleGenerator, diastoleGenerator, satGenerator])
 
-        tempGenerator2 = DataGenerator(37.7, 0.16, fs[0], 'temperature', 'celsius') 
+        tempGenerator2 = DataGenerator(36.7, 0.16, fs[0], 'temperature', 'celsius') 
         accGenerator2 = AccDataGenerator(0, 0, fs[1], 'acceleration', 'm/s2') 
         glucGenerator2 = DataGenerator(250, 1, fs[2], 'glucose', 'mg/dl') 
         systoleGenerator2 = DataGenerator(124.6, 1, fs[3], 'systole', 'mmHg') 
         diastoleGenerator2 = DataGenerator(77.7, 1, fs[4], 'diastole', 'mmHg') 
-        satGenerator2 = DataGenerator(97, 1.42, fs[5], 'saturation', '%') 
+        satGenerator2 = DataGenerator(85, 1.42, fs[5], 'saturation', '%') 
 
         sickGenerators = np.array([tempGenerator2, accGenerator2, glucGenerator2, systoleGenerator2, diastoleGenerator2, satGenerator2])
 
@@ -147,7 +147,4 @@ class TrackingDevice():
             if timeCounter == 3600: #avoids possible overflow (loop forever)
                 timeCounter = 0
             
-            if timeCounter == 5:
-                break
-
     

@@ -1,4 +1,7 @@
 {
-    "isNew": true,
-    "catalogURL": "http://127.0.0.1:8084"
+    "isNew": false,
+    "catalogURL": "http://127.0.0.1:8084",
+    "topic": "ElderlyMonitoring/3/measurement",
+    "id": 3,
+    "password": "123"
 }
