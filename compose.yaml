@@ -10,37 +10,74 @@ services:
       - catalog
     ports:
       - "1400:1400"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
     
 
   alerter:
     build: ./dataAlerter
     depends_on:
       - catalog
+    ports:
+      - "3000:3000"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
 
   connector:
     build: ./influxConnector
     depends_on:
       - catalog
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
 
   device0:
     build: ./device0
     depends_on:
       - catalog
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
 
   device1:
     build: ./device1
     depends_on:
       - catalog
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
 
   device2:
     build: ./device2
     depends_on:
       - catalog
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
     
   device3:
     build: ./device3
     depends_on:
       - catalog
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
 
   telegrambot:
     build: ./telegram
@@ -51,6 +88,11 @@ services:
       - connector
     ports:
       - "1402:1402"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
 
   statistics:
     build: ./dataStatistics
@@ -58,3 +100,8 @@ services:
       - catalog
     ports:
       - "8050:8050"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://catalog:8084"]
+        interval: 30s
+        timeout: 10s
+        retries: 5

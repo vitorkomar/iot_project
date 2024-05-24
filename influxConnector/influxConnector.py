@@ -72,7 +72,7 @@ class InfluxConnector(object):
 
     def on_message(self, PahoMQTT, obj, msg):
         message_topic = msg.topic
-        device_id = message_topic.split('/')[1] #not sure about the index TODO
+        device_id = message_topic.split('/')[1]
         dataMSG = json.loads(msg.payload)
         print("Message Received")
 
