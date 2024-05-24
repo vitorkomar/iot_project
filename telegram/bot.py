@@ -591,6 +591,8 @@ class TelegramBot():
         for userID, name in zip(chats, names):
             if 'disconnection' in message_topic:
                 alert = "Disconnection alert: Please check if the device of patient "+name+" is working!"
+                uri = '/devicesChat/'+str(deviceID)
+                requests.delete(self.catalogURL + uri)
             else:
                 alert = dataMSG['metric'].upper()+" alert: Please check patient "+name+"!"
             self.bot.sendMessage(userID, text=alert)

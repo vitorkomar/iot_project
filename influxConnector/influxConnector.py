@@ -5,6 +5,7 @@ from mqtt_client import mqttPublisher, mqttSubscriber
 import cherrypy
 import pandas as pd
 from influxdb_client_3 import InfluxDBClient3, Point, write_client_options, WriteOptions, InfluxDBError
+import time
 
 # Define callbacks for write responses
 def success(self, data: str):
@@ -90,8 +91,9 @@ class InfluxConnector(object):
         for key in data:
             metric = data[key]['n']
             point = (
-                Point(metric)
+                Point("measurements")
                 .tag("deviceID", data[key]["deviceID"])
+                .tag("metric", metric)
                 .field("unit", data[key]["u"])
                 .field("value", data[key]["v"])
                 .field("pubTime", data[key]["t"])
@@ -102,6 +104,7 @@ class InfluxConnector(object):
                 client.close()
 
             print('uploaded data')
+        time.sleep(0.001)
 
     def GET(self, *uri):
         """GET method for the influx connector, it exposes 3 functionalities
@@ -124,54 +127,56 @@ class InfluxConnector(object):
 
         if command == "check":
             metricsDict = {}
-            for metric in metrics:
-                #this query is used to get the last recorded value
-                query = """SELECT  "value"
-                        FROM '""" + str(metric) + """' 
-                        WHERE "deviceID" = """ + str(device) + """ORDER BY time DESC
-                        LIMIT 1"""
 
-                with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
-                    table = client.query(query=query, language='sql')
-                    client.close()
-    
+            query = """ SELECT "metric", LAST_VALUE("value")
+                    FROM "measurements" 
+                    WHERE ("metric" != 'acceleration') AND ("deviceID" = """ + str(device) + """) 
+                    GROUP BY "metric" """
 
-                value = table[0][0].as_py()
+
+            influxToken =  "JS6wfmURh1TfcO9oaGFrDtl2lSa7OxDxm5DJ88BG3jhgMy_WtCglNZUlMQ4qd7c8oIcERwDKzaaoviHACnpQmA=="
+            influxOrg =  "Prog4IoT"
+            influxHost =  "https://eu-central-1-1.aws.cloud2.influxdata.com"
+            influxDatabase = "ElderlyMonitoring"
+
+            with InfluxDBClient3(host=influxHost, token=influxToken, org=influxOrg, database=influxDatabase, write_client_options=wco) as client:
+                                table = client.query(query=query, language='sql')
+                                client.close()
+
+            metricsDict = {}
+
+            for i, el in enumerate(table[0]):
+                metric = el.as_py()
+                value = table[1][i].as_py()
                 metricsDict[metric] = value
+
             return json.dumps(metricsDict)
 
 
         elif command == "statistics":
             metricsDict = {}
             timeframe = uri[2]
-            for metric in metrics:
+            query = """ SELECT "metric", MEAN("value"), STDDEV("value")
+                    FROM "measurements" 
+                    WHERE ("metric" != 'acceleration') AND ("deviceID" = """ + str(device) + """) AND ("pubTime" >= now() - interval '1 """ + str(timeframe) +"""') 
+                    GROUP BY "metric" """
 
-                #this query is used to get the mean value
-                query = """SELECT MEAN("value")
-                FROM '""" + str(metric) + """' 
-                WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
+            influxToken =  "JS6wfmURh1TfcO9oaGFrDtl2lSa7OxDxm5DJ88BG3jhgMy_WtCglNZUlMQ4qd7c8oIcERwDKzaaoviHACnpQmA=="
+            influxOrg =  "Prog4IoT"
+            influxHost =  "https://eu-central-1-1.aws.cloud2.influxdata.com"
+            influxDatabase = "ElderlyMonitoring"
 
-                with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
-                    table = client.query(query=query, language='sql')
-                    client.close()
-    
-                print(table)
-                mean = table[0][0].as_py()
+            with InfluxDBClient3(host=influxHost, token=influxToken, org=influxOrg, database=influxDatabase, write_client_options=wco) as client:
+                                table = client.query(query=query, language='sql')
+                                client.close()
 
-                #this query is used to get the standard deviation of the value
-                query = """SELECT STDDEV("value")
-                FROM '""" + str(metric) + """' 
-                WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
+            metricsDict = {}
 
-
-                with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
-                    table = client.query(query=query, language='sql')
-                    client.close()
-    
-                std = table[0][0].as_py()
-
-                stastsDict = {"mean": mean, "std": std}
-                metricsDict[metric] = stastsDict
+            for i, el in enumerate(table[0]):
+                metric = el.as_py()
+                mean = table[1][i].as_py()
+                std = table[2][i].as_py()
+                metricsDict[metric] = {"mean": mean, "std": std}
             return json.dumps(metricsDict)
 
         elif command == "plot":
@@ -179,9 +184,8 @@ class InfluxConnector(object):
             metric = uri[3]
 
             query = """SELECT *
-            FROM '""" + str(metric) + """' 
-            WHERE "deviceID" = """ + str(device) + """AND "pubTime" >= now() - interval '1 """ + str(timeframe) + """'"""
-
+                        FROM "measurements"
+                        WHERE ("metric" ='""" + str(metric) + """') AND ("deviceID" = """ + str(device) + """) AND ("pubTime" >= now() - interval '1 """ + str(timeframe) +"""') """
             with InfluxDBClient3(host=self.influxHost, token=self.influxToken, org=self.influxOrg, database=self.influxDatabase, write_client_options=wco) as client:
                 table = client.query(query=query, language='sql')
                 client.close()
@@ -201,7 +205,6 @@ if __name__ == '__main__':
     }
     catalogURL = json.load(open("settings.json"))["catalogURL"]
     webService = InfluxConnector(catalogURL, 10)
-    #webService.run()
     cherrypy.tree.mount(webService, '/', conf)
     cherrypy.config.update({'server.socket_host': '0.0.0.0'})
     cherrypy.config.update({'server.socket_port': 3000})

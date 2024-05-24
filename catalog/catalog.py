@@ -26,11 +26,14 @@ def updateBotChat(curr_data, uri, new_data):
                     device[keysList[2]] = new_data[keysList[2]]
 
 def removeDevice(curr_data, uri):
-
     for el in curr_data['devices']:
+        print(el)
         if el["deviceID"] == uri[1]:
+            print("lasf")
             curr_data['devices'].remove(el)
-    
+
+
+def removeDeviceChat(curr_data, uri):
     for chat in curr_data["users"]:
         for device in chat["monitoringDevices"]:
             if device["deviceID"] == uri[1]:
@@ -39,6 +42,7 @@ def removeDevice(curr_data, uri):
     for device in curr_data["medicineReminders"]:
         if device["deviceID"] == uri[1]:
             curr_data["medicineReminders"].remove(device)
+
 
 def removeReminder(curr_data, uri):
 
@@ -115,8 +119,14 @@ class Catalog(object):
             file_data = json.load(file)
     
         if len(uri) == 2 and uri[0] == "devices":
+            print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
             try:
                 removeDevice(file_data, uri)
+            except:
+                raise cherrypy.HTTPError(400,"Bad Request. Request must contain valid device ID.")   
+        elif len(uri) == 2 and uri[0] == "devicesChat":
+            try:
+                removeDeviceChat(file_data, uri)
             except:
                 raise cherrypy.HTTPError(400,"Bad Request. Request must contain valid device ID.")        
         elif len(uri) == 3 and uri[0] == "medicineReminders":
