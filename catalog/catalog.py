@@ -27,9 +27,7 @@ def updateBotChat(curr_data, uri, new_data):
 
 def removeDevice(curr_data, uri):
     for el in curr_data['devices']:
-        print(el)
         if el["deviceID"] == uri[1]:
-            print("lasf")
             curr_data['devices'].remove(el)
 
 
@@ -119,7 +117,6 @@ class Catalog(object):
             file_data = json.load(file)
     
         if len(uri) == 2 and uri[0] == "devices":
-            print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
             try:
                 removeDevice(file_data, uri)
             except:
