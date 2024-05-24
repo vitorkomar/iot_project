@@ -11,30 +11,34 @@ services:
     ports:
       - "1400:1400"
     
-  
-  storer:
-    build: ./dataHandler
-    depends_on:
-      - catalog
-      - publisher1
 
-  publisher0:
-    build: ./publisher0
+  alerter:
+    build: ./dataAlerter
     depends_on:
       - catalog
 
-  publisher1:
-    build: ./publisher1
+  connector:
+    build: ./influxConnector
     depends_on:
       - catalog
 
-  publisher2:
-    build: ./publisher2
+  device0:
+    build: ./device0
+    depends_on:
+      - catalog
+
+  device1:
+    build: ./device1
+    depends_on:
+      - catalog
+
+  device2:
+    build: ./device2
     depends_on:
       - catalog
     
-  publisher3:
-    build: ./publisher3
+  device3:
+    build: ./device3
     depends_on:
       - catalog
 
@@ -44,7 +48,7 @@ services:
       - catalog
       - statistics
       - plotter
-      - storer
+      - connector
     ports:
       - "1402:1402"
 

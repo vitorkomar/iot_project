@@ -95,7 +95,7 @@ class TrackingDevice():
     def run(self):
         """ Simulates the behavior of all sensors inside the device while also publishing messages
         """
-        fs = np.array([5, 5, 10, 10, 10, 10])
+        fs = np.array([30, 30, 30, 30, 30, 30])
 
         tempGenerator = DataGenerator(36.6, 0.16, fs[0], 'temperature', 'celsius') 
         accGenerator = AccDataGenerator(0, 0, fs[1], 'acceleration', 'm/s2') 
@@ -130,9 +130,6 @@ class TrackingDevice():
             if timeCounter == 3600: #avoids possible overflow (loop forever)
                 timeCounter = 0
 
-            if timeCounter == 30:
-                break
-            
 
 
     
